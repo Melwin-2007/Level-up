@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P07
-- Branch: feat/p06-submissions
+- Current prompt: P08
+- Branch: feat/p07-reviews
 
 ## Checklist
 
@@ -17,7 +17,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P04 Groups
 - [x] P05 Cycles + state machine
 - [x] P06 Submissions
-- [ ] P07 Reviews
+- [x] P07 Reviews
 - [ ] P08 Backend acceptance suite + hardening
 - [ ] P09 Mobile scaffold + design system
 - [ ] P10 Mobile auth + onboarding
@@ -39,6 +39,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - `SubmissionsStatusPort` provides read-only submission status resolution for cycle member lists.
 - Goal deadlines must fall strictly inside the cycle month (`YYYY-MM-DD`).
 - In `GET /cycles/:id/submissions`, an explicit mapper strips `availability`, `constraints`, and drafts from other members' views (DECISION 13).
+- Used single-query nested creates for group creation and submission creation to eliminate interactive transaction roundtrips and avoid connection pool timeouts on remote database poolers.
+- Configured `{ maxWait: 15000, timeout: 30000 }` on multi-statement Prisma interactive transactions (`patchSubmission`, `completeReview`).
+- Review completion sets submitted submissions to `locked` with `lockedAt` and leaves `draft` untouched; verified byte-identical goals preservation (TESTING.md items 8 and 9).
 
 ## Known issues & Prod To-dos
 
@@ -46,7 +49,6 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- `submissions` module complete: `POST /cycles/:id/submission`, `GET /cycles/:id/submission`, `PATCH /cycles/:id/submission`, `POST /cycles/:id/lock-submission`, and `GET /cycles/:id/submissions`.
-- Locking enforced in both service layer (409 `SUBMISSION_LOCKED`) and database level via `trg_prevent_submission_goals_modification_when_locked` trigger.
-- Full TESTING.md items 5, 6, 7 verified in `test/submissions.e2e-spec.ts`.
-- Next prompt: P07 (`prompts/P07-reviews.md`).
+- `reviews` module complete: `POST /cycles/:id/reviews`, `GET /cycles/:id/review`, `POST /reviews/:id/comments`, `GET /reviews/:id/comments`, and `POST /reviews/:id/complete`.
+- Full TESTING.md items 8 & 9 verified in `test/reviews.e2e-spec.ts`.
+- Next prompt: P08 (`prompts/P08-backend-acceptance-hardening.md`).

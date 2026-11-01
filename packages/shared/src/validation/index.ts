@@ -5,6 +5,7 @@ export * from './me.js';
 export * from './groups.js';
 export * from './cycles.js';
 export * from './submissions.js';
+export * from './reviews.js';
 
 export const cycleStatusSchema = z.enum(CYCLE_STATUSES);
 export const submissionStatusSchema = z.enum(SUBMISSION_STATUSES);

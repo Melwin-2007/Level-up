@@ -87,22 +87,16 @@ export class SubmissionsService {
     const status: SubmissionStatus = dto.submit ? 'submitted' : 'draft';
     const submittedAt = dto.submit ? this.clock.now() : null;
 
-    await this.prisma.$transaction(async (tx) => {
-      const sub = await tx.monthlySubmission.create({
-        data: {
-          cycleId,
-          userId,
-          status,
-          availability: dto.availability as unknown as Prisma.InputJsonValue,
-          constraints: dto.constraints as unknown as Prisma.InputJsonValue,
-          submittedAt,
-        },
-      });
-
-      for (const [i, g] of dto.goals.entries()) {
-        await tx.submissionGoal.create({
-          data: {
-            submissionId: sub.id,
+    await this.prisma.monthlySubmission.create({
+      data: {
+        cycleId,
+        userId,
+        status,
+        availability: dto.availability as unknown as Prisma.InputJsonValue,
+        constraints: dto.constraints as unknown as Prisma.InputJsonValue,
+        submittedAt,
+        goals: {
+          create: dto.goals.map((g, i) => ({
             position: i,
             title: g.title,
             description: g.description,
@@ -112,9 +106,9 @@ export class SubmissionsService {
             deadline: g.deadline ? new Date(`${g.deadline}T00:00:00.000Z`) : null,
             successCriteria: g.successCriteria as unknown as Prisma.InputJsonValue,
             dependencies: g.dependencies as unknown as Prisma.InputJsonValue,
-          },
-        });
-      }
+          })),
+        },
+      },
     });
 
     return this.getOwnSubmission(cycleId, userId);
@@ -228,53 +222,56 @@ export class SubmissionsService {
       this.validateGoalDeadlines(dto.goals, cycle);
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      const updateData: Prisma.MonthlySubmissionUpdateInput = {};
+    await this.prisma.$transaction(
+      async (tx) => {
+        const updateData: Prisma.MonthlySubmissionUpdateInput = {};
 
-      if (dto.availability !== undefined) {
-        updateData.availability = dto.availability as unknown as Prisma.InputJsonValue;
-      }
-      if (dto.constraints !== undefined) {
-        updateData.constraints = dto.constraints as unknown as Prisma.InputJsonValue;
-      }
-      if (dto.submit === true && sub.status === 'draft') {
-        updateData.status = 'submitted';
-        updateData.submittedAt = this.clock.now();
-      } else if (dto.submit === false && sub.status === 'submitted') {
-        updateData.status = 'draft';
-        updateData.submittedAt = null;
-      }
+        if (dto.availability !== undefined) {
+          updateData.availability = dto.availability as unknown as Prisma.InputJsonValue;
+        }
+        if (dto.constraints !== undefined) {
+          updateData.constraints = dto.constraints as unknown as Prisma.InputJsonValue;
+        }
+        if (dto.submit === true && sub.status === 'draft') {
+          updateData.status = 'submitted';
+          updateData.submittedAt = this.clock.now();
+        } else if (dto.submit === false && sub.status === 'submitted') {
+          updateData.status = 'draft';
+          updateData.submittedAt = null;
+        }
 
-      if (Object.keys(updateData).length > 0) {
-        await tx.monthlySubmission.update({
-          where: { id: sub.id },
-          data: updateData,
-        });
-      }
-
-      if (dto.goals !== undefined) {
-        await tx.submissionGoal.deleteMany({
-          where: { submissionId: sub.id },
-        });
-
-        for (const [i, g] of dto.goals.entries()) {
-          await tx.submissionGoal.create({
-            data: {
-              submissionId: sub.id,
-              position: i,
-              title: g.title,
-              description: g.description,
-              category: g.category,
-              priority: g.priority,
-              estimatedHours: g.estimatedHours,
-              deadline: g.deadline ? new Date(`${g.deadline}T00:00:00.000Z`) : null,
-              successCriteria: g.successCriteria as unknown as Prisma.InputJsonValue,
-              dependencies: g.dependencies as unknown as Prisma.InputJsonValue,
-            },
+        if (Object.keys(updateData).length > 0) {
+          await tx.monthlySubmission.update({
+            where: { id: sub.id },
+            data: updateData,
           });
         }
-      }
-    });
+
+        if (dto.goals !== undefined) {
+          await tx.submissionGoal.deleteMany({
+            where: { submissionId: sub.id },
+          });
+
+          for (const [i, g] of dto.goals.entries()) {
+            await tx.submissionGoal.create({
+              data: {
+                submissionId: sub.id,
+                position: i,
+                title: g.title,
+                description: g.description,
+                category: g.category,
+                priority: g.priority,
+                estimatedHours: g.estimatedHours,
+                deadline: g.deadline ? new Date(`${g.deadline}T00:00:00.000Z`) : null,
+                successCriteria: g.successCriteria as unknown as Prisma.InputJsonValue,
+                dependencies: g.dependencies as unknown as Prisma.InputJsonValue,
+              },
+            });
+          }
+        }
+      },
+      { maxWait: 15000, timeout: 30000 }
+    );
 
     return this.getOwnSubmission(cycleId, userId);
   }

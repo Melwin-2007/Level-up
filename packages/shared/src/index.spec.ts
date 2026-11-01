@@ -4,6 +4,7 @@ import {
   API_ERROR_CODES,
   createCycleSchema,
   createGroupSchema,
+  createReviewCommentSchema,
   CYCLE_STATUSES,
   goalInputSchema,
   GROUP_ROLES,
@@ -124,5 +125,27 @@ describe('@mp/shared exports', () => {
         submit: true,
       }).success
     ).toBe(true);
+  });
+
+  it('should validate createReviewCommentSchema', () => {
+    const valid = {
+      submissionGoalId: '123e4567-e89b-12d3-a456-426614174000',
+      comment: 'Great goal! Make sure to align with team metrics.',
+    };
+    expect(createReviewCommentSchema.safeParse(valid).success).toBe(true);
+
+    // Empty comment
+    expect(createReviewCommentSchema.safeParse({ ...valid, comment: '' }).success).toBe(false);
+    expect(createReviewCommentSchema.safeParse({ ...valid, comment: '   ' }).success).toBe(false);
+
+    // Too long comment (> 1000 chars)
+    expect(
+      createReviewCommentSchema.safeParse({ ...valid, comment: 'A'.repeat(1001) }).success
+    ).toBe(false);
+
+    // Invalid UUID
+    expect(
+      createReviewCommentSchema.safeParse({ ...valid, submissionGoalId: 'not-a-uuid' }).success
+    ).toBe(false);
   });
 });

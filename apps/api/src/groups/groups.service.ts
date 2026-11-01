@@ -27,24 +27,18 @@ export class GroupsService {
     for (let attempt = 0; attempt < 5; attempt++) {
       const inviteCode = generateInviteCode();
       try {
-        const group = await this.prisma.$transaction(async (tx) => {
-          const created = await tx.group.create({
-            data: {
-              name: dto.name,
-              ownerId: userId,
-              inviteCode,
+        const group = await this.prisma.group.create({
+          data: {
+            name: dto.name,
+            ownerId: userId,
+            inviteCode,
+            members: {
+              create: {
+                userId,
+                role: 'owner',
+              },
             },
-          });
-
-          await tx.groupMember.create({
-            data: {
-              groupId: created.id,
-              userId,
-              role: 'owner',
-            },
-          });
-
-          return created;
+          },
         });
 
         return this.getGroupById(group.id, userId);
