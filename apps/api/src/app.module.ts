@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD, Reflector } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { ProfileRequiredGuard } from './auth/profile-required.guard.js';
+import { AppThrottlerGuard } from './common/guards/app-throttler.guard.js';
 import { validateEnv } from './config/env.schema.js';
 import { CyclesModule } from './cycles/cycles.module.js';
 import { GroupsModule } from './groups/groups.module.js';
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module.js';
   ],
   controllers: [HealthController],
   providers: [
+    Reflector,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -52,7 +54,7 @@ import { UsersModule } from './users/users.module.js';
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: AppThrottlerGuard,
     },
   ],
 })

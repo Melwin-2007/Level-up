@@ -144,7 +144,7 @@ Physical phone: install a development build (see EAS below) or Expo Go if all yo
 
 The Dockerfile at `apps/api/Dockerfile` is multi-stage and runs as a non-root user. Generic steps for Railway, Render or Fly.io:
 
-1. Create a service from the GitHub repo, build context = repo root, Dockerfile path = `apps/api/Dockerfile`.
+1. Create a service from the GitHub repo, build context = repo root, Dockerfile path = `apps/api/Dockerfile`. (To test locally: `docker build -t mp-api -f apps/api/Dockerfile .`).
 2. Set environment variables from section 5, using `mp-prod` values: `NODE_ENV=production`, `DATABASE_URL`, `DIRECT_URL`, Supabase URL and keys, JWT settings, `PORT` as the host requires.
 3. Run `prisma migrate deploy` as a release/pre-deploy command (not on every container start if you scale beyond one instance).
 4. Health check path: `/api/v1/health`.

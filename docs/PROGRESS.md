@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P08
-- Branch: feat/p07-reviews
+- Current prompt: P09
+- Branch: feat/p08-acceptance
 
 ## Checklist
 
@@ -18,7 +18,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P05 Cycles + state machine
 - [x] P06 Submissions
 - [x] P07 Reviews
-- [ ] P08 Backend acceptance suite + hardening
+- [x] P08 Backend acceptance suite + hardening
 - [ ] P09 Mobile scaffold + design system
 - [ ] P10 Mobile auth + onboarding
 - [ ] P11 Mobile groups + cycle overview
@@ -42,13 +42,19 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Used single-query nested creates for group creation and submission creation to eliminate interactive transaction roundtrips and avoid connection pool timeouts on remote database poolers.
 - Configured `{ maxWait: 15000, timeout: 30000 }` on multi-statement Prisma interactive transactions (`patchSubmission`, `completeReview`).
 - Review completion sets submitted submissions to `locked` with `lockedAt` and leaves `draft` untouched; verified byte-identical goals preservation (TESTING.md items 8 and 9).
+- Added `@nestjs/swagger` in `apps/api` (non-production only) and exported OpenAPI contract snapshot to `apps/api/openapi.json`.
+- Implemented `AppThrottlerGuard` to bind Nest 12 DI injection tokens cleanly.
+- Added `httpLoggerMiddleware` strictly logging metadata (`requestId`, `userId`, `method`, `route`, `statusCode`, `durationMs`) without sensitive request bodies.
 
 ## Known issues & Prod To-dos
 
 - [PROD TO-DO]: Turn "Confirm email" back ON for production (`mp-prod`) in Supabase Authentication settings. In development (`mp-dev`) and test (`mp-test`), "Confirm email" is disabled for frictionless onboarding.
+- [PROD DEPLOYMENT]: The API container is packaged in `apps/api/Dockerfile`. To deploy to Railway/Render/Fly, create a service with build context `.` and Dockerfile `apps/api/Dockerfile`, configure env vars from `docs/SETUP.md` Section 11, and run `prisma migrate deploy`.
 
 ## Handoff notes for the next session
 
-- `reviews` module complete: `POST /cycles/:id/reviews`, `GET /cycles/:id/review`, `POST /reviews/:id/comments`, `GET /reviews/:id/comments`, and `POST /reviews/:id/complete`.
-- Full TESTING.md items 8 & 9 verified in `test/reviews.e2e-spec.ts`.
-- Next prompt: P08 (`prompts/P08-backend-acceptance-hardening.md`).
+- Backend acceptance suite (`test/acceptance/milestone1.e2e-spec.ts`) completely verified (8/8 tests passing).
+- Security review completed in `docs/SECURITY-REVIEW-M1.md`.
+- Dynamic authorization fuzz test (`test/security/auth-fuzz.e2e-spec.ts`) verified against all registered router endpoints.
+- Full API test suite (52 unit tests, 65 e2e tests across 9 suites) 100% green.
+- Next prompt: P09 (`prompts/P09-mobile-scaffold-design-system.md`).

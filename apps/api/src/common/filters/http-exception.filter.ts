@@ -5,14 +5,20 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import type { ApiErrorBody, ApiErrorCode } from '@mp/shared';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
+
+    const requestId = request.headers['x-request-id'];
+    if (requestId && !response.getHeader('x-request-id')) {
+      response.setHeader('x-request-id', requestId);
+    }
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let code: ApiErrorCode = 'INTERNAL_SERVER_ERROR';
