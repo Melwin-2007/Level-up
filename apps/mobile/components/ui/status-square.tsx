@@ -2,7 +2,15 @@ import React from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { colors, radius } from '@/theme/tokens';
 
-export type TaskStatus = 'done' | 'in_progress' | 'pending' | 'postponed';
+export type TaskStatus =
+  | 'done'
+  | 'in_progress'
+  | 'pending'
+  | 'postponed'
+  | 'not_started'
+  | 'draft'
+  | 'submitted'
+  | 'locked';
 
 export interface StatusSquareProps {
   status: TaskStatus;
@@ -19,28 +27,39 @@ export const StatusSquare: React.FC<StatusSquareProps> = ({ status, size = 14, s
 
   switch (status) {
     case 'done':
+    case 'locked':
       return (
         <View
           style={[styles.base, containerStyle, styles.done, style]}
-          accessibilityLabel="Status: Done"
+          accessibilityLabel={`Status: ${status}`}
+        />
+      );
+
+    case 'submitted':
+      return (
+        <View
+          style={[styles.base, containerStyle, styles.submitted, style]}
+          accessibilityLabel="Status: Submitted"
         />
       );
 
     case 'in_progress':
+    case 'draft':
       return (
         <View
           style={[styles.base, containerStyle, styles.inProgressContainer, style]}
-          accessibilityLabel="Status: In progress"
+          accessibilityLabel={`Status: ${status === 'draft' ? 'Draft' : 'In progress'}`}
         >
           <View style={styles.inProgressHalf} />
         </View>
       );
 
     case 'pending':
+    case 'not_started':
       return (
         <View
           style={[styles.base, containerStyle, styles.pending, style]}
-          accessibilityLabel="Status: Pending"
+          accessibilityLabel={`Status: ${status === 'not_started' ? 'Not started' : 'Pending'}`}
         />
       );
 
@@ -62,6 +81,9 @@ const styles = StyleSheet.create({
   },
   done: {
     backgroundColor: colors.flare,
+  },
+  submitted: {
+    backgroundColor: colors.signal,
   },
   inProgressContainer: {
     borderWidth: 1,

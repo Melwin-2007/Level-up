@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P11
-- Branch: feat/p10-mobile-auth
+- Current prompt: P12
+- Branch: feat/p11-mobile-groups-cycle
 
 ## Checklist
 
@@ -21,7 +21,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P08 Backend acceptance suite + hardening
 - [x] P09 Mobile scaffold + design system
 - [x] P10 Mobile auth + onboarding
-- [ ] P11 Mobile groups + cycle overview
+- [x] P11 Mobile groups + cycle overview
 - [ ] P12 Mobile submission + review
 - [ ] P13 Acceptance on devices + APK
 
@@ -50,8 +50,11 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Implemented `services/supabase.ts` with encrypted-AsyncStorage session storage pattern (256-bit AES key in SecureStore, session in AsyncStorage via `aes-js`).
 - Implemented `services/api.ts` typed fetch client with Bearer token attachment, 401 refresh-and-retry, error parsing, and `mapApiError` mapping.
 - Implemented `stores/session.ts` with Zustand auth state sync and profile checks.
-- Created `(auth)` (Sign In, Sign Up), `onboarding` (display name, searchable IANA timezone), and `(tabs)` (Cycle, You with sign out).
-- Verified zero flicker root layout splash screen hiding on session + font readiness.
+- Created `(auth)` (Sign In, Sign Up), `onboarding` (display name, searchable IANA timezone), and `(tabs)` (Today, Month, Group, You).
+- Implemented `services/dates.ts` and `services/cycle-actions.ts` pure business logic; unit tested across all phases and roles.
+- Implemented TanStack Query hooks in `hooks/use-groups.ts` and `hooks/use-cycles.ts`.
+- Built Group tab with create/join sheets, member list, and native invite code sharing.
+- Built Month tab with MonthStrip, deadline markers, phase dates, member submission status list with `StatusSquare`, and advance confirmation sheet.
 
 ## Known issues & Prod To-dos
 
@@ -60,6 +63,6 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- Mobile authentication and onboarding verified: 23 unit tests pass across 5 test suites.
-- Monorepo typecheck and ESLint completely green.
-- Next prompt: P11 (`prompts/P11-mobile-groups-cycle-overview.md`).
+- Mobile groups and cycle overview verified: 40 unit tests pass across 7 test suites in `apps/mobile`.
+- Monorepo typecheck and ESLint 100% clean.
+- Next prompt: P12 (`prompts/P12-mobile-submission-review.md`).

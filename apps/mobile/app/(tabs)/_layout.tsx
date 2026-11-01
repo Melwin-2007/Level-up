@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Calendar, User } from 'lucide-react-native';
+import { Calendar, Clock, User, Users } from 'lucide-react-native';
 import { colors, typography } from '@/theme/tokens';
 
 export default function TabsLayout(): React.ReactNode {
@@ -27,8 +27,22 @@ export default function TabsLayout(): React.ReactNode {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Cycle',
+          title: 'Today',
+          tabBarIcon: ({ color, size }) => <Clock color={color} size={size ?? 22} />,
+        }}
+      />
+      <Tabs.Screen
+        name="month"
+        options={{
+          title: 'Month',
           tabBarIcon: ({ color, size }) => <Calendar color={color} size={size ?? 22} />,
+        }}
+      />
+      <Tabs.Screen
+        name="group"
+        options={{
+          title: 'Group',
+          tabBarIcon: ({ color, size }) => <Users color={color} size={size ?? 22} />,
         }}
       />
       <Tabs.Screen

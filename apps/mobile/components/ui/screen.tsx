@@ -7,6 +7,7 @@ import { colors, spacing } from '@/theme/tokens';
 export interface ScreenProps {
   children: React.ReactNode;
   scrollable?: boolean;
+  refreshControl?: React.ReactElement;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
 }
@@ -14,6 +15,7 @@ export interface ScreenProps {
 export const Screen: React.FC<ScreenProps> = ({
   children,
   scrollable = false,
+  refreshControl,
   style,
   contentContainerStyle,
 }) => {
@@ -25,6 +27,7 @@ export const Screen: React.FC<ScreenProps> = ({
           style={styles.scroll}
           contentContainerStyle={[styles.content, contentContainerStyle]}
           showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
         >
           {children}
         </ScrollView>
