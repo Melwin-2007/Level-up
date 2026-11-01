@@ -5,16 +5,28 @@ import { Text } from './text';
 
 export interface ErrorBarProps {
   message: string;
+  onDismiss?: () => void;
   style?: ViewStyle;
 }
 
-export const ErrorBar: React.FC<ErrorBarProps> = ({ message, style }) => {
+export const ErrorBar: React.FC<ErrorBarProps> = ({ message, onDismiss, style }) => {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.bar} />
       <Text variant="small" color="ink" style={styles.text}>
         {message}
       </Text>
+      {onDismiss ? (
+        <Text
+          variant="micro"
+          color="ash"
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss error"
+          onPress={onDismiss}
+        >
+          Dismiss
+        </Text>
+      ) : null}
     </View>
   );
 };

@@ -2,7 +2,7 @@ import '../global.css';
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -16,6 +16,7 @@ import {
   PublicSans_600SemiBold,
 } from '@expo-google-fonts/public-sans';
 import { colors } from '@/theme/tokens';
+import { useSessionStore } from '@/stores/session';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -40,6 +41,59 @@ const customDarkTheme = {
   },
 };
 
+function NavigationRouter(): React.ReactNode {
+  const segments = useSegments();
+  const router = useRouter();
+  const { session, hasProfile, isLoading, isInitialized, initialize } = useSessionStore();
+
+  useEffect(() => {
+    void initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    if (isLoading || !isInitialized) {
+      return;
+    }
+
+    const firstSegment = segments[0];
+    const inAuthGroup = firstSegment === '(auth)';
+    const isOnboarding = firstSegment === 'onboarding';
+    const isKit = firstSegment === 'kit';
+
+    if (isKit) {
+      return;
+    }
+
+    if (!session) {
+      if (!inAuthGroup) {
+        router.replace('/(auth)/sign-in');
+      }
+    } else if (!hasProfile) {
+      if (!isOnboarding) {
+        router.replace('/onboarding');
+      }
+    } else if (inAuthGroup || isOnboarding || !firstSegment || firstSegment === 'index') {
+      router.replace('/(tabs)');
+    }
+  }, [session, hasProfile, isLoading, isInitialized, segments, router]);
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.void },
+        animation: 'none',
+      }}
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="kit" />
+    </Stack>
+  );
+}
+
 export default function RootLayout(): React.ReactNode {
   const [fontsLoaded, fontError] = useFonts({
     ArchivoNarrow_600SemiBold,
@@ -49,11 +103,16 @@ export default function RootLayout(): React.ReactNode {
     PublicSans_600SemiBold,
   });
 
+  const isSessionLoading = useSessionStore((s) => s.isLoading);
+  const isSessionInitialized = useSessionStore((s) => s.isInitialized);
+
+  const isReady = (fontsLoaded || fontError) && !isSessionLoading && isSessionInitialized;
+
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (isReady) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [isReady]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -63,16 +122,7 @@ export default function RootLayout(): React.ReactNode {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={customDarkTheme}>
         <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.void },
-            animation: 'none',
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="kit" />
-        </Stack>
+        <NavigationRouter />
       </ThemeProvider>
     </QueryClientProvider>
   );

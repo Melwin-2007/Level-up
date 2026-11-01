@@ -7,15 +7,17 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors, radius, spacing } from '@/theme/tokens';
+import { Text } from './text';
 
 export interface SheetProps {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  title?: string;
   style?: ViewStyle;
 }
 
-export const Sheet: React.FC<SheetProps> = ({ visible, onClose, children, style }) => {
+export const Sheet: React.FC<SheetProps> = ({ visible, onClose, children, title, style }) => {
   const shouldReduceMotion = useReducedMotion();
   const translateY = useSharedValue(400);
 
@@ -48,6 +50,11 @@ export const Sheet: React.FC<SheetProps> = ({ visible, onClose, children, style 
           <View style={styles.handleContainer}>
             <View style={styles.handle} />
           </View>
+          {title ? (
+            <Text variant="heading" color="ink" style={styles.sheetTitle}>
+              {title}
+            </Text>
+          ) : null}
           {children}
         </Animated.View>
       </View>
@@ -89,5 +96,8 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.rule,
+  },
+  sheetTitle: {
+    marginBottom: spacing.unit * 3,
   },
 });

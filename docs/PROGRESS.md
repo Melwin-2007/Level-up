@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P10
-- Branch: feat/p09-mobile-scaffold
+- Current prompt: P11
+- Branch: feat/p10-mobile-auth
 
 ## Checklist
 
@@ -20,7 +20,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P07 Reviews
 - [x] P08 Backend acceptance suite + hardening
 - [x] P09 Mobile scaffold + design system
-- [ ] P10 Mobile auth + onboarding
+- [x] P10 Mobile auth + onboarding
 - [ ] P11 Mobile groups + cycle overview
 - [ ] P12 Mobile submission + review
 - [ ] P13 Acceptance on devices + APK
@@ -47,7 +47,11 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Added `httpLoggerMiddleware` strictly logging metadata (`requestId`, `userId`, `method`, `route`, `statusCode`, `durationMs`) without sensitive request bodies.
 - Scaffolded Expo SDK 58 in `apps/mobile` with NativeWind v4, forced dark theme (`#000000`), custom font loaders (Archivo Narrow & Public Sans).
 - Built complete `components/ui` design system and verified zero hex literals outside `theme/tokens.ts`.
-- Created dev-only `app/kit.tsx` component gallery showcasing all components, states, and accessibility properties.
+- Implemented `services/supabase.ts` with encrypted-AsyncStorage session storage pattern (256-bit AES key in SecureStore, session in AsyncStorage via `aes-js`).
+- Implemented `services/api.ts` typed fetch client with Bearer token attachment, 401 refresh-and-retry, error parsing, and `mapApiError` mapping.
+- Implemented `stores/session.ts` with Zustand auth state sync and profile checks.
+- Created `(auth)` (Sign In, Sign Up), `onboarding` (display name, searchable IANA timezone), and `(tabs)` (Cycle, You with sign out).
+- Verified zero flicker root layout splash screen hiding on session + font readiness.
 
 ## Known issues & Prod To-dos
 
@@ -56,7 +60,6 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- Mobile scaffold & design system verified: `pnpm --filter mobile typecheck` and `pnpm --filter mobile test` (11/11 tests pass).
-- Monorepo typecheck and lint completely clean across all workspaces.
-- Component kit available at dev route `/kit`.
-- Next prompt: P10 (`prompts/P10-mobile-auth-onboarding.md`).
+- Mobile authentication and onboarding verified: 23 unit tests pass across 5 test suites.
+- Monorepo typecheck and ESLint completely green.
+- Next prompt: P11 (`prompts/P11-mobile-groups-cycle-overview.md`).
