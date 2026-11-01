@@ -5,14 +5,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P01
-- Branch: main
+- Current prompt: P02
+- Branch: feat/p02-api-prisma-schema
 
 ## Checklist
 
 - [x] P00 Repo bootstrap
 - [x] P01 Supabase + environment
-- [ ] P02 API scaffold, Prisma schema, migrations, triggers, RLS
+- [x] P02 API scaffold, Prisma schema, migrations, triggers, RLS
 - [ ] P03 Auth guard + profiles
 - [ ] P04 Groups
 - [ ] P05 Cycles + state machine
@@ -29,6 +29,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Added Zod-based startup configuration validation in `apps/api/src/config/env.schema.ts` with human-readable error formatting.
 - Added database connection diagnostic script in `apps/api/scripts/check-db.ts` utilizing `pg.Client` directly without leaking secrets.
+- `profiles.id` stores `auth.users.id` directly as UUID but does not define a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
 
 ## Known issues & Prod To-dos
 
@@ -36,6 +37,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- Environment validation, example env files, and check script are built and tested.
-- Direct connection to Supabase PostgreSQL database verified.
-- Next prompt: P02 (`prompts/P02-api-prisma-schema.md`).
+- NestJS API scaffolded with `/api/v1` prefix, helmet, 100 kB body size limit, and error filter.
+- Complete Prisma schema covering all 16 tables written and migrated.
+- Check constraints, partial unique index (`one_baseline_per_member_cycle`), and PL/pgSQL immutability triggers applied and verified by 7 integration invariant tests.
+- Next prompt: P03 (`prompts/P03-auth-profiles.md`).

@@ -31,6 +31,7 @@ Agents: if something is not covered here, take the simplest option, append a new
 22. A member can comment on their own goals (self-notes are allowed). Review comments are immutable in M1 (no edit/delete).
 23. Invite code format: 8 chars from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`.
 24. Redis/BullMQ is not provisioned until M4; Milestone 1 has no background jobs.
+25. `profiles.id` stores `auth.users.id` directly as UUID but does not define a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
 
 ## Open questions for the owner (answer when convenient)
 
