@@ -5,12 +5,12 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P00
-- Branch: main
+- Current prompt: P01
+- Branch: feat/p00-bootstrap-repo
 
 ## Checklist
 
-- [ ] P00 Repo bootstrap
+- [x] P00 Repo bootstrap
 - [ ] P01 Supabase + environment
 - [ ] P02 API scaffold, Prisma schema, migrations, triggers, RLS
 - [ ] P03 Auth guard + profiles
@@ -27,7 +27,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
-(none yet)
+- Configured `onlyBuiltDependencies: ['esbuild']` in `pnpm-workspace.yaml` to permit esbuild compilation under pnpm 11+.
+- Configured `@mp/shared` with Vitest, TypeScript strict settings, Zod schemas, status string unions, and standard API error code unions.
 
 ## Known issues
 
@@ -35,4 +36,5 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-(none yet)
+- Monorepo scaffold is green (lint, typecheck, tests passing).
+- Next prompt: P01 (`prompts/P01-supabase-environment.md`) for Supabase credentials and `.env` setup.

@@ -3,9 +3,11 @@
 READ: AGENTS.md, docs/API.md (Submissions, Reviews), docs/DECISIONS.md (12, 13, 22), docs/DESIGN.md (all, wireframes), docs/COPY.md.
 
 ## Goal
+
 Members write, save and submit goals, lock them, review each other's goals and comment. The finishing flow matches SPEC 7.4.
 
 ## Tasks
+
 1. Goal submission screen (`app/cycles/[id]/submission.tsx`):
    - List of goal rows with `PriorityMarks` and hours; add/edit goal in a `Sheet` with fields: title, description, category, priority (five tappable squares), estimated hours, deadline (date picker limited to the cycle month), success criteria (type picker: checklist / metric / binary, with the fields each needs).
    - Availability step: hours per weekday (seven steppers) plus fixed commitments list; max daily hours.
@@ -20,11 +22,14 @@ Members write, save and submit goals, lock them, review each other's goals and c
 7. Tests: form-to-payload mapping, `getNextAction` additions, comment list rendering with correct author names.
 
 ## Constraints
+
 - The UI never decides what is allowed; it shows what the API returns and handles rejections.
 - No chat-bubble styling.
 
 ## Verify
+
 Manual: run the full SPEC 7.4 scenario with two devices (or device + emulator) plus a third account.
 
 ## Finish
+
 Tick P12, commit `feat(mobile): submission and group review`.

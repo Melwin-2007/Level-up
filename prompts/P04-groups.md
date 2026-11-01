@@ -3,9 +3,11 @@
 READ: AGENTS.md, docs/API.md (Groups), docs/SECURITY.md, docs/DECISIONS.md (17, 20, 23), docs/TESTING.md (item 3).
 
 ## Goal
+
 Users can create a private group, share an invite code, and join. Non-members cannot learn anything about a group.
 
 ## Tasks
+
 1. `groups` module: `POST /groups`, `GET /groups`, `GET /groups/:id`, `POST /groups/join`.
 2. Invite code generator in `common` using `crypto.randomInt` and the 8-char alphabet from DECISIONS 23; retry on unique collision (max 5).
 3. Creation runs in one transaction: group row + owner membership.
@@ -15,13 +17,16 @@ Users can create a private group, share an invite code, and join. Non-members ca
 7. Tests: TESTING.md item 3 in full (two users join the same group, cap enforced via a lowered cap in test config, non-member 404, invite code visibility).
 
 ## Constraints
+
 - Responses use explicit mappers.
 - No endpoints for removing members or rotating codes (see DECISIONS open questions).
 
 ## Verify
+
 ```
 pnpm --filter api test:e2e -- groups
 ```
 
 ## Finish
+
 Tick P04, commit `feat(groups): create, join, membership guards`.

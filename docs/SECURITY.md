@@ -2,17 +2,17 @@
 
 ## Authorization matrix (Milestone 1)
 
-| Resource | Who | Condition |
-| --- | --- | --- |
-| Own profile | self | always |
-| Group + member list | members | membership row exists |
-| Invite code | owner, admin | membership role |
-| Create cycle / advance / create review / complete review | owner, admin | role |
-| Own submission (all fields) | self | always |
-| Others' submitted goals | any member | cycle >= `group_review`, submission `submitted`/`locked`, never availability/constraints |
-| Others' drafts | nobody | never |
-| Review comments | members | same group |
-| Comment authorship | author id from JWT | never from body |
+| Resource                                                 | Who                | Condition                                                                                |
+| -------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------- |
+| Own profile                                              | self               | always                                                                                   |
+| Group + member list                                      | members            | membership row exists                                                                    |
+| Invite code                                              | owner, admin       | membership role                                                                          |
+| Create cycle / advance / create review / complete review | owner, admin       | role                                                                                     |
+| Own submission (all fields)                              | self               | always                                                                                   |
+| Others' submitted goals                                  | any member         | cycle >= `group_review`, submission `submitted`/`locked`, never availability/constraints |
+| Others' drafts                                           | nobody             | never                                                                                    |
+| Review comments                                          | members            | same group                                                                               |
+| Comment authorship                                       | author id from JWT | never from body                                                                          |
 
 Non-members receive 404 for any group, cycle, submission or review id.
 

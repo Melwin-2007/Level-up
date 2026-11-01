@@ -3,9 +3,11 @@
 READ: AGENTS.md, docs/SPEC.md (7.4), docs/TESTING.md (Mobile tests), docs/DESIGN.md (Accessibility floor).
 
 ## Goal
+
 Milestone 1 is demonstrably complete and installable.
 
 ## Tasks
+
 1. Write `docs/ACCEPTANCE-M1.md`: the SPEC 7.4 scenario as a numbered checklist with the exact steps, expected result, and a blank "result / date" column.
 2. Configure EAS: `eas.json` with `preview` (APK, internal) and `production` profiles. App name, package id, icon and adaptive icon using the palette (a black field with a single `flare` glyph; no gradient), splash `#000000`.
 3. Production environment variables via EAS secrets (`EXPO_PUBLIC_*` only; remember these are public). Point the preview build at the deployed API.
@@ -17,7 +19,9 @@ Milestone 1 is demonstrably complete and installable.
 9. Tag `m1-done`. Write the M2 starting notes in PROGRESS.md (open questions from DECISIONS.md that need answers).
 
 ## Verify
+
 All items in ACCEPTANCE-M1.md pass on a physical device. `pnpm test` and `pnpm --filter api test:e2e` green.
 
 ## Finish
+
 Tick P13. Do not begin Milestone 2 in this session.

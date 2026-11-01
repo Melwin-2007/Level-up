@@ -10,18 +10,19 @@ Before Milestone 4 (no tasks yet) the strip shows the month's phases instead: da
 
 ## Colour tokens
 
-| Token | Hex | Use |
-| --- | --- | --- |
-| `void` | `#000000` | Every screen background. True black, no tinted near-black. |
-| `oxblood` | `#830000` | Structure: gauge fill (low), selected-row bar, section underlines, borders that matter, pressed states |
-| `signal` | `#BC0202` | Primary buttons, gauge fill (mid), the active tab marker |
-| `flare` | `#FF0000` | Today, gauge fill (full), the one number that matters on a screen, errors |
-| `ink` | `#F2F2F2` | Primary text |
-| `ash` | `#A8A8A8` | Secondary text |
-| `rule` | `rgba(255,255,255,0.16)` | Hairline dividers and input borders |
-| `wash` | `rgba(255,255,255,0.05)` | Pressed/selected row fill |
+| Token     | Hex                      | Use                                                                                                    |
+| --------- | ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `void`    | `#000000`                | Every screen background. True black, no tinted near-black.                                             |
+| `oxblood` | `#830000`                | Structure: gauge fill (low), selected-row bar, section underlines, borders that matter, pressed states |
+| `signal`  | `#BC0202`                | Primary buttons, gauge fill (mid), the active tab marker                                               |
+| `flare`   | `#FF0000`                | Today, gauge fill (full), the one number that matters on a screen, errors                              |
+| `ink`     | `#F2F2F2`                | Primary text                                                                                           |
+| `ash`     | `#A8A8A8`                | Secondary text                                                                                         |
+| `rule`    | `rgba(255,255,255,0.16)` | Hairline dividers and input borders                                                                    |
+| `wash`    | `rgba(255,255,255,0.05)` | Pressed/selected row fill                                                                              |
 
 Contrast facts (do not break these):
+
 - `ink` and `ash` on `void`: above 8:1. Safe for all text.
 - `flare` on `void`: about 5.3:1. Allowed for text of 18px or larger, bold 14px or larger, and icons. Never for small body text.
 - `signal` on `void`: about 3.1:1. Never as text. As a fill it carries `ink` text (about 6.7:1).
@@ -30,13 +31,13 @@ Contrast facts (do not break these):
 
 No other hues. No green for success, no amber for warning. State is carried by shape and label, with colour as reinforcement:
 
-| State | Shape | Colour |
-| --- | --- | --- |
-| Done | solid filled square | `flare` |
-| In progress | half-filled square | `signal` |
-| Pending | outlined square | `rule` |
-| Postponed | square with a diagonal cut | `ash` |
-| Error | left bar 3px + sentence | `flare` bar, `ink` text |
+| State       | Shape                      | Colour                  |
+| ----------- | -------------------------- | ----------------------- |
+| Done        | solid filled square        | `flare`                 |
+| In progress | half-filled square         | `signal`                |
+| Pending     | outlined square            | `rule`                  |
+| Postponed   | square with a diagonal cut | `ash`                   |
+| Error       | left bar 3px + sentence    | `flare` bar, `ink` text |
 
 Gradients, glow, blur, glass: none. Shadows: none. Depth comes from hairlines and from `wash` fills.
 
@@ -52,6 +53,7 @@ No monospace for labels. Numerals in lists and stats use `fontVariant: ['tabular
 Scale (px / line-height): display-xl 64/60, display 40/42, title 26/30, heading 20/26, body 16/24, small 14/20, micro 12/16 (use sparingly, never below 12).
 
 Rules:
+
 - Sentence case everywhere. No all-caps labels, no letter-spaced eyebrows above headings.
 - No single-word colour accents inside a headline.
 - Line length under 60 characters in body copy. Left-aligned everywhere; never centre paragraphs.

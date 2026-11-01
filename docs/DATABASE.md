@@ -4,11 +4,11 @@ Interprets SPEC section 3. The SQL in SPEC.md is the intended schema. Prisma mod
 
 ## The three-record principle
 
-| Record | Tables | Mutability |
-| --- | --- | --- |
-| Submitted | `monthly_submissions`, `submission_goals` | Editable until locked, then frozen |
-| Approved | `plan_versions`, `plan_items` | Content frozen at creation; only approval fields change once |
-| Actual | `tasks`, `task_logs`, `xp_transactions` | Logs and XP append-only |
+| Record    | Tables                                    | Mutability                                                   |
+| --------- | ----------------------------------------- | ------------------------------------------------------------ |
+| Submitted | `monthly_submissions`, `submission_goals` | Editable until locked, then frozen                           |
+| Approved  | `plan_versions`, `plan_items`             | Content frozen at creation; only approval fields change once |
+| Actual    | `tasks`, `task_logs`, `xp_transactions`   | Logs and XP append-only                                      |
 
 Reports (M6) read all three and never write back into them.
 
@@ -29,16 +29,16 @@ Prisma cannot express partial unique indexes, CHECK constraints, triggers, RLS o
 
 ## Immutability triggers (write in the raw SQL migration)
 
-| Trigger | Rule |
-| --- | --- |
-| `submission_goals` BEFORE UPDATE/DELETE | Reject if the parent submission status is `locked` |
-| `submission_goals` BEFORE INSERT | Reject if the parent submission status is `locked` |
-| `monthly_submissions` BEFORE UPDATE | If OLD.status = `locked`, reject any change to availability/constraints/status |
-| `plan_versions` BEFORE UPDATE | Reject changes to `plan_snapshot`, `version_type`, `version_number`, `cycle_id`, `user_id`; allow `approval_status`, `approved_at`, `is_baseline` only from the allowed transition |
-| `plan_versions` BEFORE INSERT/UPDATE | If `version_type <> 'initial'` then `is_baseline` must be FALSE |
-| `plan_items` BEFORE UPDATE/DELETE | Always reject |
-| `task_logs` BEFORE UPDATE/DELETE | Always reject |
-| `xp_transactions` BEFORE UPDATE/DELETE | Always reject |
+| Trigger                                 | Rule                                                                                                                                                                               |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `submission_goals` BEFORE UPDATE/DELETE | Reject if the parent submission status is `locked`                                                                                                                                 |
+| `submission_goals` BEFORE INSERT        | Reject if the parent submission status is `locked`                                                                                                                                 |
+| `monthly_submissions` BEFORE UPDATE     | If OLD.status = `locked`, reject any change to availability/constraints/status                                                                                                     |
+| `plan_versions` BEFORE UPDATE           | Reject changes to `plan_snapshot`, `version_type`, `version_number`, `cycle_id`, `user_id`; allow `approval_status`, `approved_at`, `is_baseline` only from the allowed transition |
+| `plan_versions` BEFORE INSERT/UPDATE    | If `version_type <> 'initial'` then `is_baseline` must be FALSE                                                                                                                    |
+| `plan_items` BEFORE UPDATE/DELETE       | Always reject                                                                                                                                                                      |
+| `task_logs` BEFORE UPDATE/DELETE        | Always reject                                                                                                                                                                      |
+| `xp_transactions` BEFORE UPDATE/DELETE  | Always reject                                                                                                                                                                      |
 
 Write a SQL test (or e2e test) for each trigger that proves the rejection.
 

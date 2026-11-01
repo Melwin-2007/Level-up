@@ -11,26 +11,26 @@ This kit lets one person build the whole product with an AI coding agent (Claude
 
 ## 2. How the files fit together
 
-| File | Job |
-| --- | --- |
-| `AGENTS.md` | Rules the agent reads every session. Canonical. |
-| `CLAUDE.md` | Imports `AGENTS.md`; Claude Code specifics. |
-| `docs/SPEC.md` | Your original spec. Never edit casually. |
-| `docs/ARCHITECTURE.md` | Modules, request flow, auth flow, hosting. |
-| `docs/DATABASE.md` | Three-record principle, migrations, triggers, RLS. |
-| `docs/API.md` | Endpoint contract, state matrix, error format. |
-| `docs/SECURITY.md` | Authorization rules and checklist. |
-| `docs/DESIGN.md` | Colour, type, layout, components. The non-generic look. |
-| `docs/COPY.md` | Voice and exact strings. |
-| `docs/TESTING.md` | What must be tested and how. |
-| `docs/CONVENTIONS.md` | Code style, structure, git. |
-| `docs/DECISIONS.md` | Gaps in the spec, and the answer chosen for each. |
-| `docs/ROADMAP.md` | Milestones and definition of done. |
-| `docs/PROGRESS.md` | Agent's handoff notes. Updated at the end of every prompt. |
-| `prompts/00-MASTER-KICKOFF.md` | Paste once in your very first session. |
-| `prompts/P00 ... P13` | Milestone 1, one prompt per session. |
-| `prompts/UTILITY.md` | Bugfix, review, audit, resume prompts. |
-| `prompts/LATER-MILESTONES.md` | Milestones 2 to 9. |
+| File                           | Job                                                        |
+| ------------------------------ | ---------------------------------------------------------- |
+| `AGENTS.md`                    | Rules the agent reads every session. Canonical.            |
+| `CLAUDE.md`                    | Imports `AGENTS.md`; Claude Code specifics.                |
+| `docs/SPEC.md`                 | Your original spec. Never edit casually.                   |
+| `docs/ARCHITECTURE.md`         | Modules, request flow, auth flow, hosting.                 |
+| `docs/DATABASE.md`             | Three-record principle, migrations, triggers, RLS.         |
+| `docs/API.md`                  | Endpoint contract, state matrix, error format.             |
+| `docs/SECURITY.md`             | Authorization rules and checklist.                         |
+| `docs/DESIGN.md`               | Colour, type, layout, components. The non-generic look.    |
+| `docs/COPY.md`                 | Voice and exact strings.                                   |
+| `docs/TESTING.md`              | What must be tested and how.                               |
+| `docs/CONVENTIONS.md`          | Code style, structure, git.                                |
+| `docs/DECISIONS.md`            | Gaps in the spec, and the answer chosen for each.          |
+| `docs/ROADMAP.md`              | Milestones and definition of done.                         |
+| `docs/PROGRESS.md`             | Agent's handoff notes. Updated at the end of every prompt. |
+| `prompts/00-MASTER-KICKOFF.md` | Paste once in your very first session.                     |
+| `prompts/P00 ... P13`          | Milestone 1, one prompt per session.                       |
+| `prompts/UTILITY.md`           | Bugfix, review, audit, resume prompts.                     |
+| `prompts/LATER-MILESTONES.md`  | Milestones 2 to 9.                                         |
 
 ## 3. The working loop (one prompt = one session = one branch)
 
@@ -41,6 +41,7 @@ This kit lets one person build the whole product with an AI coding agent (Claude
 5. Merge, tick the box in `docs/PROGRESS.md`, start the next prompt.
 
 Rules for yourself:
+
 - Never run two prompts at once.
 - Never skip a prompt's verification.
 - If the agent gets stuck for more than two attempts, stop, use the bugfix prompt in a clean session.

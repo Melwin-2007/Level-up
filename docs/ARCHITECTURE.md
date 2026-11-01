@@ -14,18 +14,19 @@ Not present yet: Redis/BullMQ (M4), AI orchestrator (M2), scheduling engine (M3)
 
 ## API modules (apps/api/src)
 
-| Module | Owns | May call |
-| --- | --- | --- |
-| `common` | guards, filters, pipes, error codes, clock, id/code generators | nothing |
-| `auth` | JWT validation, `CurrentUser` decorator, `ProfileRequiredGuard` | common |
-| `users` | profile, timezone, preferences (`/me`) | auth, common |
-| `groups` | groups, members, invite codes, membership guard | users |
-| `cycles` | cycles, state machine, transition rules | groups |
-| `submissions` | member submission, goals, lock | cycles |
-| `reviews` | review session, comments, finalize | cycles, submissions |
-| `prisma` | PrismaService only | nothing |
+| Module        | Owns                                                            | May call            |
+| ------------- | --------------------------------------------------------------- | ------------------- |
+| `common`      | guards, filters, pipes, error codes, clock, id/code generators  | nothing             |
+| `auth`        | JWT validation, `CurrentUser` decorator, `ProfileRequiredGuard` | common              |
+| `users`       | profile, timezone, preferences (`/me`)                          | auth, common        |
+| `groups`      | groups, members, invite codes, membership guard                 | users               |
+| `cycles`      | cycles, state machine, transition rules                         | groups              |
+| `submissions` | member submission, goals, lock                                  | cycles              |
+| `reviews`     | review session, comments, finalize                              | cycles, submissions |
+| `prisma`      | PrismaService only                                              | nothing             |
 
 Rules:
+
 - Controllers parse and respond. Services hold logic. Only services touch Prisma.
 - A module never reads another module's tables directly; it calls that module's service.
 - Cycle state checks live in ONE place: `CycleStateService.assertAllows(cycle, operation)` (see API.md matrix).
