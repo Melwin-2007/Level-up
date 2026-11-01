@@ -61,19 +61,27 @@ export function getNextAction(
 
   switch (cycle.status) {
     case 'submission_open': {
-      const needsSubmission =
+      let primary: NextAction;
+      if (mySubmissionStatus === 'locked') {
+        primary = {
+          label: 'Goals locked',
+          action: 'view_submission',
+        };
+      } else if (
         mySubmissionStatus === 'none' ||
         mySubmissionStatus === 'not_started' ||
-        mySubmissionStatus === 'draft';
-      const primary: NextAction = needsSubmission
-        ? {
-            label: 'Submit goals',
-            action: 'submit_goals',
-          }
-        : {
-            label: 'Goals submitted',
-            action: 'view_submission',
-          };
+        mySubmissionStatus === 'draft'
+      ) {
+        primary = {
+          label: 'Submit goals',
+          action: 'submit_goals',
+        };
+      } else {
+        primary = {
+          label: 'Goals submitted',
+          action: 'view_submission',
+        };
+      }
 
       if (isAdminOrOwner) {
         primary.secondaryLabel = 'Move to group review';

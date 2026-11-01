@@ -4,6 +4,7 @@ import {
   formatDateWithTime,
   getDaysInMonth,
   toIsoDateOnly,
+  formatRelativeTime,
 } from '../dates';
 
 describe('services/dates', () => {
@@ -33,5 +34,13 @@ describe('services/dates', () => {
   it('toIsoDateOnly should format UTC date string', () => {
     const d = new Date(Date.UTC(2026, 10, 5));
     expect(toIsoDateOnly(d)).toBe('2026-11-05');
+  });
+
+  it('formatRelativeTime should return compact relative units', () => {
+    const base = new Date('2026-11-15T12:00:00Z');
+    expect(formatRelativeTime('2026-11-15T11:59:30Z', base)).toBe('now');
+    expect(formatRelativeTime('2026-11-15T11:45:00Z', base)).toBe('15m');
+    expect(formatRelativeTime('2026-11-15T08:00:00Z', base)).toBe('4h');
+    expect(formatRelativeTime('2026-11-13T12:00:00Z', base)).toBe('2d');
   });
 });

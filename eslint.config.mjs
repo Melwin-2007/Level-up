@@ -25,7 +25,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.config.js', '**/*.config.cjs', '**/load-tokens.cjs'],
+    files: ['**/*.config.js', '**/*.config.cjs', '**/load-tokens.cjs', '**/*.setup.js'],
     languageOptions: {
       globals: {
         module: 'writable',

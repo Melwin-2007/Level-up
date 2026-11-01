@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import {
   Button,
   Divider,
@@ -31,6 +32,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function MonthScreen(): React.ReactNode {
+  const router = useRouter();
   const profile = useSessionStore((s) => s.profile);
   const user = useSessionStore((s) => s.user);
   const timezone = profile?.timezone || 'UTC';
@@ -244,7 +246,16 @@ export default function MonthScreen(): React.ReactNode {
               variant="primary"
               disabled={nextAction.disabled}
               onPress={() => {
-                // Route navigation will connect in P12
+                if (
+                  nextAction.action === 'submit_goals' ||
+                  nextAction.action === 'view_submission'
+                ) {
+                  router.push(`/cycles/${cycle.id}/submission`);
+                } else if (nextAction.action === 'review_goals') {
+                  router.push(`/cycles/${cycle.id}/review`);
+                } else if (nextAction.action === 'create_cycle') {
+                  setCreateCycleSheetOpen(true);
+                }
               }}
             />
 

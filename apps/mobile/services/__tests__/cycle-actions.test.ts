@@ -43,6 +43,12 @@ describe('services/cycle-actions', () => {
       expect(action.label).toBe('Goals submitted');
     });
 
+    it('should show Goals locked when already locked', () => {
+      const action = getNextAction(cycle, 'member', 'locked');
+      expect(action.action).toBe('view_submission');
+      expect(action.label).toBe('Goals locked');
+    });
+
     it('should offer Move to group review secondary action to owner/admin', () => {
       const action = getNextAction(cycle, 'owner', 'submitted');
       expect(action.secondaryAction).toBe('advance_to_review');

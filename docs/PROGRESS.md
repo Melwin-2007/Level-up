@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P12
-- Branch: main
+- Current prompt: P13
+- Branch: feat/p12-mobile-submission-review
 
 ## Checklist
 
@@ -22,7 +22,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P09 Mobile scaffold + design system
 - [x] P10 Mobile auth + onboarding
 - [x] P11 Mobile groups + cycle overview
-- [ ] P12 Mobile submission + review
+- [x] P12 Mobile submission + review
 - [ ] P13 Acceptance on devices + APK
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
@@ -55,6 +55,11 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Implemented TanStack Query hooks in `hooks/use-groups.ts` and `hooks/use-cycles.ts`.
 - Built Group tab with create/join sheets, member list, and native invite code sharing.
 - Built Month tab with MonthStrip, deadline markers, phase dates, member submission status list with `StatusSquare`, and advance confirmation sheet.
+- Implemented `submission-draft.ts` Zustand store with `persist` middleware to survive app crashes.
+- Implemented `submission-mapper.ts` for bidirectional conversion between form state and shared Zod API payloads.
+- Built Goal submission screen (`apps/mobile/app/cycles/[id]/submission.tsx`) with goal rows, add/edit goal Sheet, 5-square priority picker, deadline bounded by cycle month, success criteria picker (checklist, metric, binary), weekday steppers, lock confirmation, and orchestrated motion.
+- Built Group review screen (`apps/mobile/app/cycles/[id]/review.tsx`) grouping goals by member with accordion goal details, inline comment rows with relative timestamps, add comment Sheet, finish review confirmation, and 15s conditional polling while active.
+- Added Jest test suites for submission mapping, draft store, and review comment list (56/56 tests passing across 10 suites in mobile).
 
 ## Known issues & Prod To-dos
 
@@ -63,6 +68,6 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- Mobile groups and cycle overview verified: 40 unit tests pass across 7 test suites in `apps/mobile`.
+- Mobile submission and group review (P12) complete: 56 unit tests pass across 10 test suites in `apps/mobile`; 114 tests pass monorepo-wide.
 - Monorepo typecheck and ESLint 100% clean.
-- Next prompt: P12 (`prompts/P12-mobile-submission-review.md`).
+- Next prompt: P13 (`prompts/P13-acceptance-devices-apk.md`).

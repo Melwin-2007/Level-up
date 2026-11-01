@@ -89,6 +89,7 @@ function NavigationRouter(): React.ReactNode {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="cycles" />
       <Stack.Screen name="kit" />
     </Stack>
   );
