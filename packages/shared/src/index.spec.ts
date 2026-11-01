@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  advanceCycleSchema,
   API_ERROR_CODES,
+  createCycleSchema,
   createGroupSchema,
   CYCLE_STATUSES,
   GROUP_ROLES,
@@ -57,5 +59,28 @@ describe('@mp/shared exports', () => {
 
     expect(joinGroupSchema.safeParse({ inviteCode: 'ABCDEFGH' }).success).toBe(true);
     expect(joinGroupSchema.safeParse({ inviteCode: '' }).success).toBe(false);
+  });
+
+  it('should validate createCycleSchema and advanceCycleSchema', () => {
+    const validCycle = {
+      year: 2026,
+      month: 11,
+      submissionDeadline: '2026-11-05T00:00:00.000Z',
+      reviewDeadline: '2026-11-08T00:00:00.000Z',
+    };
+    expect(createCycleSchema.safeParse(validCycle).success).toBe(true);
+
+    // Invalid month
+    expect(createCycleSchema.safeParse({ ...validCycle, month: 13 }).success).toBe(false);
+    expect(createCycleSchema.safeParse({ ...validCycle, month: 0 }).success).toBe(false);
+
+    // Invalid ISO string
+    expect(
+      createCycleSchema.safeParse({ ...validCycle, submissionDeadline: 'not-a-date' }).success
+    ).toBe(false);
+
+    // advanceCycleSchema
+    expect(advanceCycleSchema.safeParse({ force: true }).success).toBe(true);
+    expect(advanceCycleSchema.safeParse({}).success).toBe(true);
   });
 });

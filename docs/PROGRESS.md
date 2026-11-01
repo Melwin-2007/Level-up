@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P05
-- Branch: feat/p04-groups
+- Current prompt: P06
+- Branch: feat/p05-cycles
 
 ## Checklist
 
@@ -15,7 +15,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P02 API scaffold, Prisma schema, migrations, triggers, RLS
 - [x] P03 Auth guard + profiles
 - [x] P04 Groups
-- [ ] P05 Cycles + state machine
+- [x] P05 Cycles + state machine
 - [ ] P06 Submissions
 - [ ] P07 Reviews
 - [ ] P08 Backend acceptance suite + hardening
@@ -35,6 +35,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Invite code generated from 8-char alphabet `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` using `crypto.randomInt` with retry loop (max 5) on collision.
 - `POST /groups/join` rate-limited to 5 writes/min per user via ThrottlerGuard tracking `req.user.userId`.
 - Non-members receive 404 for group-scoped endpoints (DECISION 20). Plain members cannot see `inviteCode` in group detail.
+- Cycle state matrix and transitions encapsulated solely in `CycleStateService` using an injectable `Clock` provider.
+- `SubmissionsStatusPort` provides read-only submission status resolution for cycle member lists without coupling to future submissions write logic.
 
 ## Known issues & Prod To-dos
 
@@ -42,7 +44,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- `groups` module complete: `POST /groups`, `GET /groups`, `GET /groups/:id`, and `POST /groups/join`.
-- `GroupMemberGuard` and `GroupAdminGuard` implemented and exported. `GroupsService` exports `requireMembership` and `requireAdmin` for subsequent modules (cycles, submissions, reviews).
-- 41 automated tests passing across workspaces (`test/groups.e2e-spec.ts`, `test/auth-profiles.e2e-spec.ts`, `test/db/invariants.e2e-spec.ts`, `test/health.e2e-spec.ts`, unit tests).
-- Next prompt: P05 (`prompts/P05-cycles.md`).
+- `cycles` module complete: `POST /groups/:id/cycles`, `GET /cycles/current?groupId=`, `GET /cycles/:id`, and `POST /cycles/:id/advance`.
+- `CycleStateService` enforces the full state matrix table and transition table (`submission_open -> group_review -> planning`).
+- `GET /cycles/current` accurately determines the current cycle according to the caller's profile timezone, falling back to the most recent cycle.
+- 48 automated tests passing across cycles test suites (`test/cycles.e2e-spec.ts` 12 tests, `src/cycles/cycle-state.service.spec.ts` 36 tests).
+- Next prompt: P06 (`prompts/P06-submissions.md`).

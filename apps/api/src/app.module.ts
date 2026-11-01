@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { ProfileRequiredGuard } from './auth/profile-required.guard.js';
 import { validateEnv } from './config/env.schema.js';
+import { CyclesModule } from './cycles/cycles.module.js';
 import { GroupsModule } from './groups/groups.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     UsersModule,
     GroupsModule,
+    CyclesModule,
   ],
   controllers: [HealthController],
   providers: [
