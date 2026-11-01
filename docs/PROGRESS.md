@@ -6,7 +6,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Current milestone: 1
 - Current prompt: P01
-- Branch: feat/p00-bootstrap-repo
+- Branch: main
 
 ## Checklist
 
