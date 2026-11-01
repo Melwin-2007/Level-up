@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { ProfileRequiredGuard } from './auth/profile-required.guard.js';
 import { validateEnv } from './config/env.schema.js';
+import { GroupsModule } from './groups/groups.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -21,18 +22,20 @@ import { UsersModule } from './users/users.module.js';
         name: 'default',
         ttl: 60000,
         limit: 60,
+        getTracker: (req: Record<string, unknown>) => {
+          const user = req['user'] as { userId?: string } | undefined;
+          const ip = req['ip'] as string | undefined;
+          return user?.userId ?? ip ?? 'unknown';
+        },
       },
     ]),
     PrismaModule,
     AuthModule,
     UsersModule,
+    GroupsModule,
   ],
   controllers: [HealthController],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -40,6 +43,10 @@ import { UsersModule } from './users/users.module.js';
     {
       provide: APP_GUARD,
       useClass: ProfileRequiredGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

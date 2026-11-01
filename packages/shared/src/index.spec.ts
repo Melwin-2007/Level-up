@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   API_ERROR_CODES,
+  createGroupSchema,
   CYCLE_STATUSES,
   GROUP_ROLES,
+  joinGroupSchema,
   SUBMISSION_STATUSES,
   updateProfileSchema,
 } from './index.js';
@@ -45,5 +47,15 @@ describe('@mp/shared exports', () => {
       timezone: 'Mars/Phobos',
     });
     expect(invalidTz.success).toBe(false);
+  });
+
+  it('should validate createGroupSchema and joinGroupSchema', () => {
+    expect(createGroupSchema.safeParse({ name: 'Alpha Squad' }).success).toBe(true);
+    expect(createGroupSchema.safeParse({ name: '' }).success).toBe(false);
+    expect(createGroupSchema.safeParse({ name: '   ' }).success).toBe(false);
+    expect(createGroupSchema.safeParse({ name: 'G'.repeat(61) }).success).toBe(false);
+
+    expect(joinGroupSchema.safeParse({ inviteCode: 'ABCDEFGH' }).success).toBe(true);
+    expect(joinGroupSchema.safeParse({ inviteCode: '' }).success).toBe(false);
   });
 });

@@ -22,6 +22,7 @@ export const envSchema = z
     JWT_VERIFY_MODE: z.enum(['jwks', 'hs256']).default('jwks'),
     SUPABASE_JWKS_URL: z.string().url().optional(),
     SUPABASE_JWT_SECRET: z.string().min(1).optional(),
+    MAX_GROUP_MEMBERS: z.coerce.number().int().min(1).default(12),
   })
   .superRefine((data, ctx) => {
     if (data.JWT_VERIFY_MODE === 'jwks' && !data.SUPABASE_JWKS_URL) {

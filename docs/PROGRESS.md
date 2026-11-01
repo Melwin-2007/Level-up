@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P04
-- Branch: feat/p03-profiles
+- Current prompt: P05
+- Branch: feat/p04-groups
 
 ## Checklist
 
@@ -14,7 +14,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P01 Supabase + environment
 - [x] P02 API scaffold, Prisma schema, migrations, triggers, RLS
 - [x] P03 Auth guard + profiles
-- [ ] P04 Groups
+- [x] P04 Groups
 - [ ] P05 Cycles + state machine
 - [ ] P06 Submissions
 - [ ] P07 Reviews
@@ -28,10 +28,13 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
 - Added Zod-based startup configuration validation in `apps/api/src/config/env.schema.ts` with human-readable error formatting.
-- Added database connection diagnostic script in `apps/api/scripts/check-db.ts` utilizing `pg.Client` directly without leaking secrets.
 - `profiles.id` stores `auth.users.id` directly as UUID without a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
 - Global `JwtAuthGuard` supports both `jwks` and `hs256` verification modes via `jose`.
-- Timezone validation in `@mp/shared` uses `Intl.DateTimeFormat(undefined, { timeZone })` to validate canonical names and IANA link identifiers (such as `'Asia/Kolkata'`).
+- Timezone validation in `@mp/shared` uses `Intl.DateTimeFormat(undefined, { timeZone })` to validate canonical names and IANA link identifiers.
+- Added `MAX_GROUP_MEMBERS` in env schema (default 12 per DECISION 17).
+- Invite code generated from 8-char alphabet `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` using `crypto.randomInt` with retry loop (max 5) on collision.
+- `POST /groups/join` rate-limited to 5 writes/min per user via ThrottlerGuard tracking `req.user.userId`.
+- Non-members receive 404 for group-scoped endpoints (DECISION 20). Plain members cannot see `inviteCode` in group detail.
 
 ## Known issues & Prod To-dos
 
@@ -39,9 +42,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- Global `JwtAuthGuard` enforces JWT authentication with `sub` attached as `req.user.userId`.
-- Global `ProfileRequiredGuard` enforces profile existence (`403 PROFILE_REQUIRED`) except on `@AllowWithoutProfile()` (`PUT /me`).
-- Users module implements `GET /me` and `PUT /me` with `@mp/shared` Zod schemas and default timezone `Asia/Kolkata`.
-- Global `ThrottlerGuard` protects API routes against spam/abuse.
-- E2E tests in `test/auth-profiles.e2e-spec.ts` verify all unauthenticated, token expiry, profile creation, and user isolation scenarios.
-- Next prompt: P04 (`prompts/P04-groups.md`).
+- `groups` module complete: `POST /groups`, `GET /groups`, `GET /groups/:id`, and `POST /groups/join`.
+- `GroupMemberGuard` and `GroupAdminGuard` implemented and exported. `GroupsService` exports `requireMembership` and `requireAdmin` for subsequent modules (cycles, submissions, reviews).
+- 41 automated tests passing across workspaces (`test/groups.e2e-spec.ts`, `test/auth-profiles.e2e-spec.ts`, `test/db/invariants.e2e-spec.ts`, `test/health.e2e-spec.ts`, unit tests).
+- Next prompt: P05 (`prompts/P05-cycles.md`).
