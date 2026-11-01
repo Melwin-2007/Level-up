@@ -4,10 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "eslint src/ scripts/",
+    "lint": "eslint src/ scripts/ test/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check-db": "tsx scripts/check-db.ts"
+    "test:e2e": "vitest run test/",
+    "check-db": "tsx scripts/check-db.ts",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "db:reset:test": "tsx scripts/reset-test-db.ts"
   },
   "dependencies": {
     "@mp/shared": "workspace:*",
@@ -17,6 +21,7 @@
     "@nestjs/platform-express": "^12.3.2",
     "@prisma/client": "^6.4.1",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "helmet": "^8.3.0",
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
@@ -24,6 +29,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@nestjs/testing": "^12.3.2",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.13.9",
     "@types/pg": "^8.11.11",
     "@types/supertest": "^6.0.2",
