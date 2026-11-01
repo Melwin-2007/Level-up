@@ -6,7 +6,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Current milestone: 1
 - Current prompt: P01
-- Branch: feat/p01-supabase-environment
+- Branch: main
 
 ## Checklist
 
@@ -29,7 +29,6 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Added Zod-based startup configuration validation in `apps/api/src/config/env.schema.ts` with human-readable error formatting.
 - Added database connection diagnostic script in `apps/api/scripts/check-db.ts` utilizing `pg.Client` directly without leaking secrets.
-- Created `docs/SETUP.md` specifying complete Supabase environment provisioning steps for `mp-dev` and `mp-test`.
 
 ## Known issues & Prod To-dos
 
@@ -38,5 +37,5 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Handoff notes for the next session
 
 - Environment validation, example env files, and check script are built and tested.
-- Developer needs to create the Supabase project and provide credentials in `apps/api/.env`.
+- Direct connection to Supabase PostgreSQL database verified.
 - Next prompt: P02 (`prompts/P02-api-prisma-schema.md`).

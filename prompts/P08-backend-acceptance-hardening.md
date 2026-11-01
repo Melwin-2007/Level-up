@@ -13,7 +13,7 @@ Prove the entire backend flow with one scenario test, then close security gaps b
 3. Add an authorization fuzz test: for each route, call it with (a) no token, (b) a valid token for a non-member, (c) a member without the needed role. Assert expected 401/404/403. Generate the route list from Nest's router so new routes cannot be forgotten.
 4. Confirm: no response includes raw Prisma rows; log lines contain no goal/comment text; helmet and CORS configured; request-id present on errors.
 5. Generate an OpenAPI document from Nest (`@nestjs/swagger`) in non-production only, so you can inspect the contract. Save a snapshot `apps/api/openapi.json` in the repo.
-6. Add `Dockerfile` (multi-stage, non-root user) and deployment notes to `docs/SETUP.md` for Railway/Render/Fly. Deploy the API once to a free tier and run `curl /api/v1/health`.
+6. Add `Dockerfile` (multi-stage, non-root user) and any corrections to the deployment section (11) of `docs/SETUP.md` for Railway/Render/Fly. Deploy the API once to a free tier and run `curl /api/v1/health`.
 
 ## Constraints
 
