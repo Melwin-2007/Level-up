@@ -10,6 +10,7 @@ import { CyclesModule } from './cycles/cycles.module.js';
 import { GroupsModule } from './groups/groups.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { SubmissionsModule } from './submissions/submissions.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -35,6 +36,7 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     GroupsModule,
     CyclesModule,
+    SubmissionsModule,
   ],
   controllers: [HealthController],
   providers: [

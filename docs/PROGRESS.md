@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P06
-- Branch: feat/p05-cycles
+- Current prompt: P07
+- Branch: feat/p06-submissions
 
 ## Checklist
 
@@ -16,7 +16,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P03 Auth guard + profiles
 - [x] P04 Groups
 - [x] P05 Cycles + state machine
-- [ ] P06 Submissions
+- [x] P06 Submissions
 - [ ] P07 Reviews
 - [ ] P08 Backend acceptance suite + hardening
 - [ ] P09 Mobile scaffold + design system
@@ -36,7 +36,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - `POST /groups/join` rate-limited to 5 writes/min per user via ThrottlerGuard tracking `req.user.userId`.
 - Non-members receive 404 for group-scoped endpoints (DECISION 20). Plain members cannot see `inviteCode` in group detail.
 - Cycle state matrix and transitions encapsulated solely in `CycleStateService` using an injectable `Clock` provider.
-- `SubmissionsStatusPort` provides read-only submission status resolution for cycle member lists without coupling to future submissions write logic.
+- `SubmissionsStatusPort` provides read-only submission status resolution for cycle member lists.
+- Goal deadlines must fall strictly inside the cycle month (`YYYY-MM-DD`).
+- In `GET /cycles/:id/submissions`, an explicit mapper strips `availability`, `constraints`, and drafts from other members' views (DECISION 13).
 
 ## Known issues & Prod To-dos
 
@@ -44,8 +46,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- `cycles` module complete: `POST /groups/:id/cycles`, `GET /cycles/current?groupId=`, `GET /cycles/:id`, and `POST /cycles/:id/advance`.
-- `CycleStateService` enforces the full state matrix table and transition table (`submission_open -> group_review -> planning`).
-- `GET /cycles/current` accurately determines the current cycle according to the caller's profile timezone, falling back to the most recent cycle.
-- 48 automated tests passing across cycles test suites (`test/cycles.e2e-spec.ts` 12 tests, `src/cycles/cycle-state.service.spec.ts` 36 tests).
-- Next prompt: P06 (`prompts/P06-submissions.md`).
+- `submissions` module complete: `POST /cycles/:id/submission`, `GET /cycles/:id/submission`, `PATCH /cycles/:id/submission`, `POST /cycles/:id/lock-submission`, and `GET /cycles/:id/submissions`.
+- Locking enforced in both service layer (409 `SUBMISSION_LOCKED`) and database level via `trg_prevent_submission_goals_modification_when_locked` trigger.
+- Full TESTING.md items 5, 6, 7 verified in `test/submissions.e2e-spec.ts`.
+- Next prompt: P07 (`prompts/P07-reviews.md`).

@@ -5,8 +5,10 @@ import {
   createCycleSchema,
   createGroupSchema,
   CYCLE_STATUSES,
+  goalInputSchema,
   GROUP_ROLES,
   joinGroupSchema,
+  submissionInputSchema,
   SUBMISSION_STATUSES,
   updateProfileSchema,
 } from './index.js';
@@ -82,5 +84,45 @@ describe('@mp/shared exports', () => {
     // advanceCycleSchema
     expect(advanceCycleSchema.safeParse({ force: true }).success).toBe(true);
     expect(advanceCycleSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('should validate goalInputSchema and submissionInputSchema', () => {
+    const validGoal = {
+      title: 'Complete NestJS Submissions Module',
+      description: 'Implement full test coverage and schema validation',
+      category: 'Backend',
+      priority: 2,
+      estimatedHours: 4.5,
+      deadline: '2026-11-20',
+      successCriteria: {
+        type: 'checklist' as const,
+        items: ['Write schemas', 'Write tests', 'Pass lint'],
+      },
+      dependencies: [],
+    };
+    expect(goalInputSchema.safeParse(validGoal).success).toBe(true);
+
+    // Empty title
+    expect(goalInputSchema.safeParse({ ...validGoal, title: '' }).success).toBe(false);
+
+    // Priority out of bounds
+    expect(goalInputSchema.safeParse({ ...validGoal, priority: 6 }).success).toBe(false);
+    expect(goalInputSchema.safeParse({ ...validGoal, priority: 0 }).success).toBe(false);
+
+    // Estimated hours out of bounds
+    expect(goalInputSchema.safeParse({ ...validGoal, estimatedHours: 0.1 }).success).toBe(false);
+    expect(goalInputSchema.safeParse({ ...validGoal, estimatedHours: 401 }).success).toBe(false);
+
+    // Invalid deadline regex
+    expect(goalInputSchema.safeParse({ ...validGoal, deadline: '20-11-2026' }).success).toBe(false);
+
+    // Submission input requires 1-25 goals
+    expect(submissionInputSchema.safeParse({ goals: [] }).success).toBe(false);
+    expect(
+      submissionInputSchema.safeParse({
+        goals: [validGoal],
+        submit: true,
+      }).success
+    ).toBe(true);
   });
 });

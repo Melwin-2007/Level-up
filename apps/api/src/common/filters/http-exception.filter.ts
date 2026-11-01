@@ -66,6 +66,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
     }
 
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      console.error('Unhandled server error in HttpExceptionFilter:', exception);
+    }
+
     const errorBody: ApiErrorBody = {
       error: {
         code,
