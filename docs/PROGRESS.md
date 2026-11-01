@@ -6,7 +6,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Current milestone: 1
 - Current prompt: P12
-- Branch: feat/p11-mobile-groups-cycle
+- Branch: main
 
 ## Checklist
 
