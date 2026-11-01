@@ -5,15 +5,15 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P02
-- Branch: feat/p02-api-prisma-schema
+- Current prompt: P04
+- Branch: feat/p03-profiles
 
 ## Checklist
 
 - [x] P00 Repo bootstrap
 - [x] P01 Supabase + environment
 - [x] P02 API scaffold, Prisma schema, migrations, triggers, RLS
-- [ ] P03 Auth guard + profiles
+- [x] P03 Auth guard + profiles
 - [ ] P04 Groups
 - [ ] P05 Cycles + state machine
 - [ ] P06 Submissions
@@ -29,7 +29,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Added Zod-based startup configuration validation in `apps/api/src/config/env.schema.ts` with human-readable error formatting.
 - Added database connection diagnostic script in `apps/api/scripts/check-db.ts` utilizing `pg.Client` directly without leaking secrets.
-- `profiles.id` stores `auth.users.id` directly as UUID but does not define a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
+- `profiles.id` stores `auth.users.id` directly as UUID without a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
+- Global `JwtAuthGuard` supports both `jwks` and `hs256` verification modes via `jose`.
+- Timezone validation in `@mp/shared` uses `Intl.DateTimeFormat(undefined, { timeZone })` to validate canonical names and IANA link identifiers (such as `'Asia/Kolkata'`).
 
 ## Known issues & Prod To-dos
 
@@ -37,7 +39,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- NestJS API scaffolded with `/api/v1` prefix, helmet, 100 kB body size limit, and error filter.
-- Complete Prisma schema covering all 16 tables written and migrated.
-- Check constraints, partial unique index (`one_baseline_per_member_cycle`), and PL/pgSQL immutability triggers applied and verified by 7 integration invariant tests.
-- Next prompt: P03 (`prompts/P03-auth-profiles.md`).
+- Global `JwtAuthGuard` enforces JWT authentication with `sub` attached as `req.user.userId`.
+- Global `ProfileRequiredGuard` enforces profile existence (`403 PROFILE_REQUIRED`) except on `@AllowWithoutProfile()` (`PUT /me`).
+- Users module implements `GET /me` and `PUT /me` with `@mp/shared` Zod schemas and default timezone `Asia/Kolkata`.
+- Global `ThrottlerGuard` protects API routes against spam/abuse.
+- E2E tests in `test/auth-profiles.e2e-spec.ts` verify all unauthenticated, token expiry, profile creation, and user isolation scenarios.
+- Next prompt: P04 (`prompts/P04-groups.md`).

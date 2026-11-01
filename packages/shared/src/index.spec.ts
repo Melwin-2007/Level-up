@@ -16,12 +16,34 @@ describe('@mp/shared exports', () => {
   });
 
   it('should validate profile payload using updateProfileSchema', () => {
-    const valid = { displayName: 'Alice', timezone: 'America/New_York' };
+    // 1 char display name is valid (1-60)
+    const valid = { displayName: 'A', timezone: 'Asia/Kolkata' };
     const parsed = updateProfileSchema.safeParse(valid);
     expect(parsed.success).toBe(true);
 
-    const invalid = { displayName: 'A', timezone: '' };
-    const invalidParsed = updateProfileSchema.safeParse(invalid);
-    expect(invalidParsed.success).toBe(false);
+    // Default timezone works when omitted
+    const withDefaultTz = updateProfileSchema.safeParse({ displayName: 'Bob' });
+    expect(withDefaultTz.success).toBe(true);
+    if (withDefaultTz.success) {
+      expect(withDefaultTz.data.timezone).toBe('Asia/Kolkata');
+    }
+
+    // Empty display name is rejected
+    const emptyName = updateProfileSchema.safeParse({ displayName: '', timezone: 'UTC' });
+    expect(emptyName.success).toBe(false);
+
+    // Over 60 characters is rejected
+    const longName = updateProfileSchema.safeParse({
+      displayName: 'A'.repeat(61),
+      timezone: 'UTC',
+    });
+    expect(longName.success).toBe(false);
+
+    // Invalid IANA timezone is rejected
+    const invalidTz = updateProfileSchema.safeParse({
+      displayName: 'Charlie',
+      timezone: 'Mars/Phobos',
+    });
+    expect(invalidTz.success).toBe(false);
   });
 });
