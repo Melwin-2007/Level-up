@@ -6,12 +6,12 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Current milestone: 1
 - Current prompt: P01
-- Branch: main
+- Branch: feat/p01-supabase-environment
 
 ## Checklist
 
 - [x] P00 Repo bootstrap
-- [ ] P01 Supabase + environment
+- [x] P01 Supabase + environment
 - [ ] P02 API scaffold, Prisma schema, migrations, triggers, RLS
 - [ ] P03 Auth guard + profiles
 - [ ] P04 Groups
@@ -27,14 +27,16 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
-- Configured `onlyBuiltDependencies: ['esbuild']` in `pnpm-workspace.yaml` to permit esbuild compilation under pnpm 11+.
-- Configured `@mp/shared` with Vitest, TypeScript strict settings, Zod schemas, status string unions, and standard API error code unions.
+- Added Zod-based startup configuration validation in `apps/api/src/config/env.schema.ts` with human-readable error formatting.
+- Added database connection diagnostic script in `apps/api/scripts/check-db.ts` utilizing `pg.Client` directly without leaking secrets.
+- Created `docs/SETUP.md` specifying complete Supabase environment provisioning steps for `mp-dev` and `mp-test`.
 
-## Known issues
+## Known issues & Prod To-dos
 
-(none yet)
+- [PROD TO-DO]: Turn "Confirm email" back ON for production (`mp-prod`) in Supabase Authentication settings. In development (`mp-dev`) and test (`mp-test`), "Confirm email" is disabled for frictionless onboarding.
 
 ## Handoff notes for the next session
 
-- Monorepo scaffold is green (lint, typecheck, tests passing).
-- Next prompt: P01 (`prompts/P01-supabase-environment.md`) for Supabase credentials and `.env` setup.
+- Environment validation, example env files, and check script are built and tested.
+- Developer needs to create the Supabase project and provide credentials in `apps/api/.env`.
+- Next prompt: P02 (`prompts/P02-api-prisma-schema.md`).
