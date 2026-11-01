@@ -37,6 +37,7 @@ Agents: if something is not covered here, take the simplest option, append a new
 28. Mobile design system: All hex colors reside strictly in `apps/mobile/theme/tokens.ts`. Tailwind configuration dynamically loads tokens via `load-tokens.cjs` to enforce single-source-of-truth. Enforced by automated test `apps/mobile/theme/__tests__/no-hex-outside-tokens.test.ts`.
 29. Mobile MonthStrip cell sizing: On standard 360dp-wide screens (320dp container), cells are computed dynamically (8dp wide with 2dp gaps for 31 days) fitting cleanly without horizontal scrolling (`requiresScroll = false`). Horizontal scrolling is enabled only if cells would be under 8dp.
 30. Mobile session storage: Session persistence uses an encrypted-AsyncStorage pattern with `aes-js` (CTR mode with counter). A 256-bit AES key is generated and stored in Expo SecureStore (bypassing the 2048-byte Android SecureStore limit), while the encrypted ciphertext is stored in AsyncStorage.
+31. Web preview support: For visual inspection in web browsers, `react-native-web` and `@expo/metro-runtime` are supported. Metro resolver handles `.js` extensions on relative imports in monorepo packages (`@mp/shared`) during bundling. Static export (`expo export --platform web`) is served via local HTTP server for testing.
 
 ## Open questions for the owner (answer when convenient)
 
