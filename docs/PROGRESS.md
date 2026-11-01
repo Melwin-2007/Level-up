@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 1
-- Current prompt: P09
-- Branch: feat/p08-acceptance
+- Current prompt: P10
+- Branch: feat/p09-mobile-scaffold
 
 ## Checklist
 
@@ -19,7 +19,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P06 Submissions
 - [x] P07 Reviews
 - [x] P08 Backend acceptance suite + hardening
-- [ ] P09 Mobile scaffold + design system
+- [x] P09 Mobile scaffold + design system
 - [ ] P10 Mobile auth + onboarding
 - [ ] P11 Mobile groups + cycle overview
 - [ ] P12 Mobile submission + review
@@ -45,6 +45,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Added `@nestjs/swagger` in `apps/api` (non-production only) and exported OpenAPI contract snapshot to `apps/api/openapi.json`.
 - Implemented `AppThrottlerGuard` to bind Nest 12 DI injection tokens cleanly.
 - Added `httpLoggerMiddleware` strictly logging metadata (`requestId`, `userId`, `method`, `route`, `statusCode`, `durationMs`) without sensitive request bodies.
+- Scaffolded Expo SDK 58 in `apps/mobile` with NativeWind v4, forced dark theme (`#000000`), custom font loaders (Archivo Narrow & Public Sans).
+- Built complete `components/ui` design system and verified zero hex literals outside `theme/tokens.ts`.
+- Created dev-only `app/kit.tsx` component gallery showcasing all components, states, and accessibility properties.
 
 ## Known issues & Prod To-dos
 
@@ -53,8 +56,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Handoff notes for the next session
 
-- Backend acceptance suite (`test/acceptance/milestone1.e2e-spec.ts`) completely verified (8/8 tests passing).
-- Security review completed in `docs/SECURITY-REVIEW-M1.md`.
-- Dynamic authorization fuzz test (`test/security/auth-fuzz.e2e-spec.ts`) verified against all registered router endpoints.
-- Full API test suite (52 unit tests, 65 e2e tests across 9 suites) 100% green.
-- Next prompt: P09 (`prompts/P09-mobile-scaffold-design-system.md`).
+- Mobile scaffold & design system verified: `pnpm --filter mobile typecheck` and `pnpm --filter mobile test` (11/11 tests pass).
+- Monorepo typecheck and lint completely clean across all workspaces.
+- Component kit available at dev route `/kit`.
+- Next prompt: P10 (`prompts/P10-mobile-auth-onboarding.md`).

@@ -34,6 +34,8 @@ Agents: if something is not covered here, take the simplest option, append a new
 25. `profiles.id` stores `auth.users.id` directly as UUID but does not define a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
 26. Remote PgBouncer connections: use single-query nested creates (e.g. creating group + initial owner member, creating submission + goals) to avoid transaction timeouts over high-latency connections. Multi-statement interactive transactions specify `{ maxWait: 15000, timeout: 30000 }`.
 27. Added `@nestjs/swagger` in `apps/api` (non-production only) per P08 Task 5 to generate and inspect OpenAPI specifications (`apps/api/openapi.json`).
+28. Mobile design system: All hex colors reside strictly in `apps/mobile/theme/tokens.ts`. Tailwind configuration dynamically loads tokens via `load-tokens.cjs` to enforce single-source-of-truth. Enforced by automated test `apps/mobile/theme/__tests__/no-hex-outside-tokens.test.ts`.
+29. Mobile MonthStrip cell sizing: On standard 360dp-wide screens (320dp container), cells are computed dynamically (8dp wide with 2dp gaps for 31 days) fitting cleanly without horizontal scrolling (`requiresScroll = false`). Horizontal scrolling is enabled only if cells would be under 8dp.
 
 ## Open questions for the owner (answer when convenient)
 
