@@ -1,0 +1,265 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Health"]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "UsersController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Users"]
+      },
+      "put": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Users"]
+      }
+    },
+    "/api/v1/groups": {
+      "post": {
+        "operationId": "GroupsController_createGroup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Groups"]
+      },
+      "get": {
+        "operationId": "GroupsController_getMyGroups",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Groups"]
+      }
+    },
+    "/api/v1/groups/join": {
+      "post": {
+        "operationId": "GroupsController_joinGroup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Groups"]
+      }
+    },
+    "/api/v1/groups/{id}": {
+      "get": {
+        "operationId": "GroupsController_getGroupById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Groups"]
+      }
+    },
+    "/api/v1/groups/{id}/cycles": {
+      "post": {
+        "operationId": "GroupCyclesController_createCycle",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["GroupCycles"]
+      }
+    },
+    "/api/v1/cycles/current": {
+      "get": {
+        "operationId": "CyclesController_getCurrentCycle",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Cycles"]
+      }
+    },
+    "/api/v1/cycles/{id}": {
+      "get": {
+        "operationId": "CyclesController_getCycleById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Cycles"]
+      }
+    },
+    "/api/v1/cycles/{id}/advance": {
+      "post": {
+        "operationId": "CyclesController_advanceCycle",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Cycles"]
+      }
+    },
+    "/api/v1/cycles/{id}/submission": {
+      "post": {
+        "operationId": "SubmissionsController_createSubmission",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Submissions"]
+      },
+      "get": {
+        "operationId": "SubmissionsController_getOwnSubmission",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Submissions"]
+      },
+      "patch": {
+        "operationId": "SubmissionsController_patchSubmission",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Submissions"]
+      }
+    },
+    "/api/v1/cycles/{id}/lock-submission": {
+      "post": {
+        "operationId": "SubmissionsController_lockSubmission",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Submissions"]
+      }
+    },
+    "/api/v1/cycles/{id}/submissions": {
+      "get": {
+        "operationId": "SubmissionsController_getOthersSubmissions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Submissions"]
+      }
+    },
+    "/api/v1/cycles/{id}/reviews": {
+      "post": {
+        "operationId": "CycleReviewsController_createReview",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["CycleReviews"]
+      }
+    },
+    "/api/v1/cycles/{id}/review": {
+      "get": {
+        "operationId": "CycleReviewsController_getReview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["CycleReviews"]
+      }
+    },
+    "/api/v1/reviews/{id}/comments": {
+      "post": {
+        "operationId": "ReviewsController_addComment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Reviews"]
+      },
+      "get": {
+        "operationId": "ReviewsController_getComments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Reviews"]
+      }
+    },
+    "/api/v1/reviews/{id}/complete": {
+      "post": {
+        "operationId": "ReviewsController_completeReview",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Reviews"]
+      }
+    }
+  },
+  "info": {
+    "title": "Monthly Productivity API",
+    "description": "Group-reviewed monthly planning app API",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}

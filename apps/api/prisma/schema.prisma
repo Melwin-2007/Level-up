@@ -1,0 +1,301 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id          String   @id @db.Uuid
+  displayName String   @map("display_name")
+  timezone    String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  ownedGroups      Group[]             @relation("GroupOwner")
+  groupMemberships GroupMember[]
+  submissions      MonthlySubmission[]
+  planVersions     PlanVersion[]
+  goals            Goal[]
+  tasks            Task[]
+  taskLogs         TaskLog[]
+  monthlyReports   MonthlyReport[]
+  reviewComments   ReviewComment[]
+  xpTransactions   XpTransaction[]
+
+  @@map("profiles")
+}
+
+model Group {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  ownerId    String   @map("owner_id") @db.Uuid
+  inviteCode String   @unique @map("invite_code") @db.VarChar(8)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  owner   Profile        @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members GroupMember[]
+  cycles  MonthlyCycle[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId  String   @map("group_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  role     String   @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+
+  group Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+model MonthlyCycle {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId            String   @map("group_id") @db.Uuid
+  year               Int
+  month              Int
+  status             String   @default("submission_open")
+  submissionDeadline DateTime @map("submission_deadline") @db.Timestamptz(6)
+  reviewDeadline     DateTime @map("review_deadline") @db.Timestamptz(6)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  group          Group               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  submissions    MonthlySubmission[]
+  review         GroupReview?
+  goals          Goal[]
+  planVersions   PlanVersion[]
+  tasks          Task[]
+  monthlyReports MonthlyReport[]
+
+  @@unique([groupId, year, month])
+  @@index([groupId, status])
+  @@map("monthly_cycles")
+}
+
+model MonthlySubmission {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycleId      String    @map("cycle_id") @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  status       String    @default("draft")
+  availability Json      @default("{}")
+  constraints  Json      @default("{}")
+  lockedAt     DateTime? @map("locked_at") @db.Timestamptz(6)
+  submittedAt  DateTime? @map("submitted_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  cycle MonthlyCycle     @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  user  Profile          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goals SubmissionGoal[]
+
+  @@unique([cycleId, userId])
+  @@index([cycleId])
+  @@map("monthly_submissions")
+}
+
+model SubmissionGoal {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submissionId    String    @map("submission_id") @db.Uuid
+  title           String
+  description     String?
+  category        String?
+  priority        Int       @default(1)
+  estimatedHours  Float?    @map("estimated_hours")
+  deadline        DateTime? @db.Timestamptz(6)
+  successCriteria Json?     @map("success_criteria")
+  dependencies    Json?     @default("[]")
+  position        Int       @default(0) @db.SmallInt
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  submission MonthlySubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  comments   ReviewComment[]
+
+  @@index([submissionId])
+  @@map("submission_goals")
+}
+
+model GroupReview {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycleId     String    @unique @map("cycle_id") @db.Uuid
+  startedAt   DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cycle    MonthlyCycle    @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  comments ReviewComment[]
+
+  @@map("group_reviews")
+}
+
+model ReviewComment {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewId         String   @map("review_id") @db.Uuid
+  submissionGoalId String   @map("submission_goal_id") @db.Uuid
+  authorId         String   @map("author_id") @db.Uuid
+  comment          String
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  review GroupReview    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  goal   SubmissionGoal @relation(fields: [submissionGoalId], references: [id], onDelete: Cascade)
+  author Profile        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([submissionGoalId, createdAt])
+  @@map("review_comments")
+}
+
+model Goal {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycleId          String    @map("cycle_id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  submissionGoalId String?   @map("submission_goal_id") @db.Uuid
+  title            String
+  description      String?
+  category         String?
+  priority         Int       @default(1)
+  targetHours      Float?    @map("target_hours")
+  deadline         DateTime? @db.Timestamptz(6)
+  status           String    @default("pending")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  cycle     MonthlyCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  user      Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  planItems PlanItem[]
+
+  @@map("goals")
+}
+
+model PlanVersion {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycleId        String    @map("cycle_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  versionNumber  Int       @default(1) @map("version_number")
+  versionType    String    @default("initial") @map("version_type")
+  approvalStatus String    @default("pending") @map("approval_status")
+  isBaseline     Boolean   @default(false) @map("is_baseline")
+  planSnapshot   Json      @map("plan_snapshot")
+  approvedAt     DateTime? @map("approved_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cycle     MonthlyCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  user      Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planItems PlanItem[]
+
+  @@unique([cycleId, userId, versionNumber])
+  @@map("plan_versions")
+}
+
+model PlanItem {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planVersionId    String    @map("plan_version_id") @db.Uuid
+  goalId           String?   @map("goal_id") @db.Uuid
+  itemType         String    @map("item_type")
+  title            String
+  description      String?
+  plannedDate      DateTime? @map("planned_date") @db.Date
+  weekNumber       Int?      @map("week_number")
+  estimatedMinutes Int       @default(0) @map("estimated_minutes")
+  orderIndex       Int       @default(0) @map("order_index")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  planVersion PlanVersion @relation(fields: [planVersionId], references: [id], onDelete: Cascade)
+  goal        Goal?       @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  @@map("plan_items")
+}
+
+model Task {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycleId          String    @map("cycle_id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  goalId           String?   @map("goal_id") @db.Uuid
+  planItemId       String?   @map("plan_item_id") @db.Uuid
+  title            String
+  description      String?
+  status           String    @default("pending")
+  scheduledDate    DateTime? @map("scheduled_date") @db.Date
+  estimatedMinutes Int       @default(0) @map("estimated_minutes")
+  actualMinutes    Int       @default(0) @map("actual_minutes")
+  completedAt      DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  cycle MonthlyCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  user  Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal  Goal?        @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  logs  TaskLog[]
+
+  @@map("tasks")
+}
+
+model TaskLog {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskId          String   @map("task_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  action          String
+  durationMinutes Int      @default(0) @map("duration_minutes")
+  note            String?
+  metadata        Json?    @default("{}")
+  loggedAt        DateTime @default(now()) @map("logged_at") @db.Timestamptz(6)
+
+  task Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("task_logs")
+}
+
+model MonthlyReport {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycleId         String   @map("cycle_id") @db.Uuid
+  userId          String?  @map("user_id") @db.Uuid
+  reportType      String   @map("report_type")
+  metrics         Json     @default("{}")
+  insights        Json?
+  sharingSettings Json?    @map("sharing_settings")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cycle MonthlyCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  user  Profile?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("monthly_reports")
+}
+
+model XpTransaction {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  amount         Int
+  reason         String
+  idempotencyKey String   @unique @map("idempotency_key")
+  metadata       Json?    @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("xp_transactions")
+}
+
+model AiActionLog {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String?  @map("user_id") @db.Uuid
+  actionType       String   @map("action_type")
+  model            String
+  promptTokens     Int      @default(0) @map("prompt_tokens")
+  completionTokens Int      @default(0) @map("completion_tokens")
+  totalCost        Float?   @map("total_cost")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("ai_action_logs")
+}
