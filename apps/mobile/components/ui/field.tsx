@@ -12,16 +12,23 @@ export interface FieldProps {
 }
 
 export const Field: React.FC<FieldProps> = ({ label, hint, error, children, style }) => {
+  const content =
+    React.isValidElement<{ hasError?: boolean }>(children) && error
+      ? React.cloneElement(children, {
+          hasError: children.props.hasError ?? true,
+        })
+      : children;
+
   return (
     <View style={[styles.container, style]}>
       <Text variant="small" color="ash" style={styles.label}>
         {label}
       </Text>
-      <View style={styles.inputWrapper}>{children}</View>
+      <View style={styles.inputWrapper}>{content}</View>
       {error ? (
         <View style={styles.errorWrapper}>
           <View style={styles.errorBar} />
-          <Text variant="small" color="ink" style={styles.errorText}>
+          <Text variant="small" color="flare" style={styles.errorText}>
             {error}
           </Text>
         </View>
@@ -52,8 +59,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.unit * 1.5,
-    paddingLeft: spacing.unit * 2,
+    paddingLeft: spacing.unit * 3,
+    paddingRight: spacing.unit * 2,
+    paddingVertical: spacing.unit,
     position: 'relative',
+    backgroundColor: colors.wash,
+    borderRadius: 2,
+    width: '100%',
   },
   errorBar: {
     position: 'absolute',
@@ -62,6 +74,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 3,
     backgroundColor: colors.flare,
+    borderTopLeftRadius: 2,
+    borderBottomLeftRadius: 2,
   },
   errorText: {
     flex: 1,

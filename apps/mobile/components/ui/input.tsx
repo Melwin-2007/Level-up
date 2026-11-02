@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     backgroundColor: 'transparent',
     textAlignVertical: 'center',
+    outlineWidth: 0,
   },
   focused: {
     borderColor: colors.flare,

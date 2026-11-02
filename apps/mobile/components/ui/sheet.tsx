@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -55,7 +55,15 @@ export const Sheet: React.FC<SheetProps> = ({ visible, onClose, children, title,
               {title}
             </Text>
           ) : null}
-          {children}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {children}
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>
@@ -84,8 +92,9 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderColor: colors.rule,
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.unit * 8,
-    minHeight: 240,
+    maxHeight: '88%',
+    minHeight: 200,
+    width: '100%',
   },
   handleContainer: {
     alignItems: 'center',
@@ -98,6 +107,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.rule,
   },
   sheetTitle: {
-    marginBottom: spacing.unit * 3,
+    marginBottom: spacing.unit * 2,
+  },
+  scroll: {
+    width: '100%',
+  },
+  scrollContent: {
+    paddingBottom: spacing.unit * 6,
   },
 });
