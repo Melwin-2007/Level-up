@@ -381,7 +381,7 @@ export default function SubmissionScreen(): React.ReactNode {
 
       {/* Goals Section */}
       <View style={styles.sectionHeader}>
-        <Text variant="small" color="flare">
+        <Text variant="small" color="ash">
           GOALS ({draft.goals.length})
         </Text>
       </View>
@@ -442,7 +442,7 @@ export default function SubmissionScreen(): React.ReactNode {
 
       {/* Availability Section */}
       <View style={styles.sectionHeader}>
-        <Text variant="small" color="flare">
+        <Text variant="small" color="ash">
           WEEKLY AVAILABILITY
         </Text>
       </View>
@@ -542,7 +542,7 @@ export default function SubmissionScreen(): React.ReactNode {
 
       {/* Fixed Commitments */}
       <View style={styles.sectionHeader}>
-        <Text variant="small" color="flare">
+        <Text variant="small" color="ash">
           FIXED COMMITMENTS
         </Text>
       </View>
@@ -766,7 +766,7 @@ export default function SubmissionScreen(): React.ReactNode {
               onPress={() => setChecklistItems([...checklistItems, ''])}
             />
             {goalErrors.checklist ? (
-              <Text variant="micro" color="signal">
+              <Text variant="micro" color="ink">
                 {goalErrors.checklist}
               </Text>
             ) : null}

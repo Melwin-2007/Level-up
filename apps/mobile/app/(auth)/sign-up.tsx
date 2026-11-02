@@ -67,7 +67,7 @@ export default function SignUpScreen(): React.ReactNode {
 
       {notice ? (
         <View style={styles.noticeContainer}>
-          <Text variant="body" color="signal">
+          <Text variant="body" color="ink">
             {notice}
           </Text>
         </View>

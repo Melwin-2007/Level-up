@@ -41,7 +41,7 @@ export default function TodayScreen(): React.ReactNode {
   return (
     <Screen scrollable={true} contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text variant="small" color="flare" tabularNums={true}>
+        <Text variant="small" color="ink" tabularNums={true}>
           {todayFormatted}
         </Text>
         <Title>{profile?.displayName ? `Hello, ${profile.displayName}` : 'Today'}</Title>
@@ -111,7 +111,7 @@ export default function TodayScreen(): React.ReactNode {
                 <Text variant="small" color="ash">
                   Cycle status
                 </Text>
-                <Text variant="small" color="flare">
+                <Text variant="small" color="ink">
                   {cycle.status === 'submission_open'
                     ? 'Submitting goals'
                     : cycle.status === 'group_review'

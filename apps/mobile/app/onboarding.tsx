@@ -148,7 +148,7 @@ export default function OnboardingScreen(): React.ReactNode {
             <Text variant="body" color="ink">
               {timezone}
             </Text>
-            <Text variant="small" color="flare">
+            <Text variant="small" color="ink">
               Change
             </Text>
           </Pressable>

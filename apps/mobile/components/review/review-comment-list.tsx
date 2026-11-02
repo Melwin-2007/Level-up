@@ -35,7 +35,7 @@ export function ReviewCommentList({
         return (
           <View key={c.id} style={styles.commentRow} testID={`comment-${c.id}`}>
             <View style={styles.headerRow}>
-              <Text variant="small" color="flare" style={styles.author}>
+              <Text variant="small" color="ink" style={styles.author}>
                 {displayName}
               </Text>
               <Text variant="micro" color="ash" tabularNums={true}>

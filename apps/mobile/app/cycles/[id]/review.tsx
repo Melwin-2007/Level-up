@@ -107,7 +107,7 @@ function GoalAccordionItem({
           ) : null}
 
           {goal.deadline ? (
-            <Text variant="micro" color="flare" tabularNums={true} style={styles.goalDeadline}>
+            <Text variant="micro" color="ash" tabularNums={true} style={styles.goalDeadline}>
               Deadline: {goal.deadline}
             </Text>
           ) : null}
@@ -157,7 +157,7 @@ function GoalAccordionItem({
               accessibilityLabel="Add comment"
             >
               <MessageSquarePlus size={16} color={colors.flare} />
-              <Text variant="small" color="flare" style={styles.addCommentText}>
+              <Text variant="small" color="ink" style={styles.addCommentText}>
                 Add comment
               </Text>
             </Pressable>
@@ -406,7 +406,7 @@ export default function ReviewScreen(): React.ReactNode {
         title="Add comment"
       >
         {activeCommentGoal ? (
-          <Text variant="small" color="flare" style={styles.commentGoalTitle}>
+          <Text variant="small" color="ink" style={styles.commentGoalTitle}>
             Goal: {activeCommentGoal.title}
           </Text>
         ) : null}

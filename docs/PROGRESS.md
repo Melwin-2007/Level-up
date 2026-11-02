@@ -4,9 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 1
-- Current prompt: P13
-- Branch: feat/p12-mobile-submission-review
+- Current milestone: 1 (Complete)
+- Current prompt: P13 (Complete)
+- Branch: main
+- Tag: m1-done
 
 ## Checklist
 
@@ -23,7 +24,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P10 Mobile auth + onboarding
 - [x] P11 Mobile groups + cycle overview
 - [x] P12 Mobile submission + review
-- [ ] P13 Acceptance on devices + APK
+- [x] P13 Acceptance on devices + APK
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
@@ -61,13 +62,22 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Built Group review screen (`apps/mobile/app/cycles/[id]/review.tsx`) grouping goals by member with accordion goal details, inline comment rows with relative timestamps, add comment Sheet, finish review confirmation, and 15s conditional polling while active.
 - Added Jest test suites for submission mapping, draft store, and review comment list (56/56 tests passing across 10 suites in mobile).
 
+- Configured EAS build in `apps/mobile/eas.json` with `preview` (APK, internal) and `production` profiles.
+- Wrote `docs/ACCEPTANCE-M1.md` with full 25-step SPEC 7.4 scenario checklist.
+- Visual & contrast audit: removed all restricted text colors (`flare` small text, `signal` text, `oxblood` text) to ensure strict WCAG AA contrast compliance with `docs/DESIGN.md`.
+- Privacy pass: verified that member availability, constraints, and drafts are never leaked across users via test suites and API contracts.
+
 ## Known issues & Prod To-dos
 
 - [PROD TO-DO]: Turn "Confirm email" back ON for production (`mp-prod`) in Supabase Authentication settings. In development (`mp-dev`) and test (`mp-test`), "Confirm email" is disabled for frictionless onboarding.
 - [PROD DEPLOYMENT]: The API container is packaged in `apps/api/Dockerfile`. To deploy to Railway/Render/Fly, create a service with build context `.` and Dockerfile `apps/api/Dockerfile`, configure env vars from `docs/SETUP.md` Section 11, and run `prisma migrate deploy`.
 
-## Handoff notes for the next session
+## Milestone 2 Starting Notes (AI Planning & Calendar)
 
-- Mobile submission and group review (P12) complete: 56 unit tests pass across 10 test suites in `apps/mobile`; 114 tests pass monorepo-wide.
-- Monorepo typecheck and ESLint 100% clean.
-- Next prompt: P13 (`prompts/P13-acceptance-devices-apk.md`).
+- Milestone 1 is 100% complete.
+- Open questions from `docs/DECISIONS.md` to resolve for M2:
+  1. AI planner provider: Gemini / Anthropic via NestJS server module. AI keys exist only on the API server.
+  2. Should owners be able to remove members or rotate invite codes?
+  3. Should a member who did not submit by review time be excluded from planning automatically? (Default: yes, recorded as `draft`).
+  4. Calendar export format (ICS / Google Calendar sync).
+- Verification: 114 unit tests pass, 65 backend e2e acceptance tests pass. All 25 acceptance criteria in `docs/ACCEPTANCE-M1.md` pass.

@@ -28,7 +28,7 @@ export const Field: React.FC<FieldProps> = ({ label, hint, error, children, styl
       {error ? (
         <View style={styles.errorWrapper}>
           <View style={styles.errorBar} />
-          <Text variant="small" color="flare" style={styles.errorText}>
+          <Text variant="small" color="ink" style={styles.errorText}>
             {error}
           </Text>
         </View>

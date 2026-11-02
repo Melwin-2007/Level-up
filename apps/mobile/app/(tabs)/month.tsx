@@ -224,7 +224,7 @@ export default function MonthScreen(): React.ReactNode {
               <Text variant="small" color="ink">
                 Submitting goals
               </Text>
-              <Text variant="micro" color="flare" tabularNums={true}>
+              <Text variant="micro" color="ink" tabularNums={true}>
                 {formatDateWithTime(cycle.submissionDeadline, timezone)}
               </Text>
             </Row>
