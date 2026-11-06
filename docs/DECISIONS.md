@@ -38,6 +38,11 @@ Agents: if something is not covered here, take the simplest option, append a new
 29. Mobile MonthStrip cell sizing: On standard 360dp-wide screens (320dp container), cells are computed dynamically (8dp wide with 2dp gaps for 31 days) fitting cleanly without horizontal scrolling (`requiresScroll = false`). Horizontal scrolling is enabled only if cells would be under 8dp.
 30. Mobile session storage: Session persistence uses an encrypted-AsyncStorage pattern with `aes-js` (CTR mode with counter). A 256-bit AES key is generated and stored in Expo SecureStore (bypassing the 2048-byte Android SecureStore limit), while the encrypted ciphertext is stored in AsyncStorage.
 31. Web preview support: For visual inspection in web browsers, `react-native-web` and `@expo/metro-runtime` are supported. Metro resolver handles `.js` extensions on relative imports in monorepo packages (`@mp/shared`) during bundling. Static export (`expo export --platform web`) is served via local HTTP server for testing.
+32. AI provider selection: `LlmClient` interface abstracts LLM calls. In testing and offline dev, `FakeLlmClient` provides deterministic fixtures. When `AI_PROVIDER=gemini` or `AI_PROVIDER=openai`, API keys (`AI_API_KEY`) and models (`AI_MODEL`) exist only on the server, never exposed in client bundles or logged.
+33. Excluded members in planning: Only members with `locked` submissions have plan versions generated during `planning`. Members with `draft` or `none` submission status are excluded from automated planning and do not block cycle progression.
+34. Plan versioning & rate limits: Plan generation starts at version 1 (`initial`). Plan regenerations with feedback notes increment `version_number` with a hard limit of 3 generations per cycle per member. Earlier unapproved versions remain immutable for auditability.
+35. Baseline plan immutability: First approval of a plan version atomically sets `is_baseline = true` and `approval_status = 'approved'`. Once baseline, the plan snapshot is immutable.
+36. AI plan review UI: Follows DESIGN.md strictly (no chat bubbles). Plain row structure for questions and answers with high-contrast badge "Proposed by AI" on all unapproved plans.
 
 ## Open questions for the owner (answer when convenient)
 

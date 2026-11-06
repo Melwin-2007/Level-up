@@ -14,6 +14,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
 import { SubmissionsModule } from './submissions/submissions.module.js';
 import { UsersModule } from './users/users.module.js';
+import { AiModule } from './ai/ai.module.js';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { UsersModule } from './users/users.module.js';
     CyclesModule,
     SubmissionsModule,
     ReviewsModule,
+    AiModule,
   ],
   controllers: [HealthController],
   providers: [

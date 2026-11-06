@@ -23,8 +23,18 @@ export const envSchema = z
     SUPABASE_JWKS_URL: z.string().url().optional(),
     SUPABASE_JWT_SECRET: z.string().min(1).optional(),
     MAX_GROUP_MEMBERS: z.coerce.number().int().min(1).default(12),
+    AI_PROVIDER: z.enum(['fake', 'gemini', 'openai']).default('fake'),
+    AI_API_KEY: z.string().min(1).optional(),
+    AI_MODEL: z.string().min(1).default('gemini-3.5-flash'),
   })
   .superRefine((data, ctx) => {
+    if (data.AI_PROVIDER !== 'fake' && !data.AI_API_KEY && data.NODE_ENV !== 'test') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['AI_API_KEY'],
+        message: `AI_API_KEY is required when AI_PROVIDER is "${data.AI_PROVIDER}"`,
+      });
+    }
     if (data.JWT_VERIFY_MODE === 'jwks' && !data.SUPABASE_JWKS_URL) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
