@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 2 (In progress)
-- Current prompt: P22 (Complete, advancing to P23)
-- Branch: feat/p22-feasibility-decomposition
+- Current prompt: P23 (Complete, advancing to P24)
+- Branch: feat/p23-plan-generation
 
 ## Checklist
 
@@ -32,11 +32,15 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P20 LLM gateway
 - [x] P21 Planner input builder
 - [x] P22 Feasibility and decomposition
-- [ ] P23 Plan generation API
+- [x] P23 Plan generation API
 - [ ] P24 Plan approval API
 - [ ] P25 Mobile AI plan review
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented `POST /cycles/:id/generate-plan` and `GET /cycles/:id/plan` in `PlansService` & `PlansController`.
+- Enforced 3 generations per cycle per member rate limit returning 429 `PLAN_GENERATION_LIMIT_EXCEEDED`.
+- Persisted immutable plan versions (`initial` vs `reoptimized`) and plan items atomically via Prisma transactions.
 
 - Added Zod schemas for `FeasibilityReport` and `PlanDecomposition` in `@mp/shared` covering capacity ratios, goal verdicts, conflicts, and weekly milestones.
 - Created versioned prompt builder `buildPlannerPrompt` (`planner-decomposition` v1.0) incorporating availability, dated exceptions, locked goals, and optional user adjustment feedback.

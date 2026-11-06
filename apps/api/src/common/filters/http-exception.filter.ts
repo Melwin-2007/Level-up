@@ -32,7 +32,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        const resObj = exceptionResponse as Record<string, unknown>;
+        let resObj = exceptionResponse as Record<string, unknown>;
+        if (typeof resObj['error'] === 'object' && resObj['error'] !== null) {
+          resObj = { ...resObj, ...(resObj['error'] as Record<string, unknown>) };
+        }
         if (typeof resObj['code'] === 'string') {
           code = resObj['code'] as ApiErrorCode;
         }

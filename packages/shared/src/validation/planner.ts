@@ -52,3 +52,17 @@ export const planDecompositionSchema = z.object({
   pacingSummary: z.string().min(1),
 });
 export type PlanDecomposition = z.infer<typeof planDecompositionSchema>;
+
+export const generatePlanInputSchema = z.object({
+  adjustmentsNote: z
+    .string()
+    .trim()
+    .max(1000, 'Adjustments note cannot exceed 1000 characters')
+    .optional(),
+});
+export type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
+
+export const approvePlanInputSchema = z.object({
+  planVersionId: z.string().uuid(),
+});
+export type ApprovePlanInput = z.infer<typeof approvePlanInputSchema>;

@@ -13,7 +13,7 @@ export class AiService {
 
   constructor(
     @Inject(LLM_CLIENT) private readonly llmClient: LlmClient,
-    private readonly prisma: PrismaService
+    @Inject(PrismaService) private readonly prisma: PrismaService
   ) {}
 
   async generateStructured<T>(params: LlmGenerateParams<T>): Promise<LlmResponse<T>> {

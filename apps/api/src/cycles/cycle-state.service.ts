@@ -46,6 +46,22 @@ export const STATE_MATRIX: Readonly<
     completed: false,
     cancelled: false,
   },
+  'plan.generate': {
+    submission_open: false,
+    group_review: false,
+    planning: true,
+    execution: false,
+    completed: false,
+    cancelled: false,
+  },
+  'plan.approve': {
+    submission_open: false,
+    group_review: false,
+    planning: true,
+    execution: false,
+    completed: false,
+    cancelled: false,
+  },
   advance: {
     submission_open: true,
     group_review: true,

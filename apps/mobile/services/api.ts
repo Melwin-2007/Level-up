@@ -36,6 +36,8 @@ export const ERROR_MESSAGES: Record<ApiErrorCode, string> = {
   REVIEW_EXISTS: 'A review already exists for this cycle.',
   GROUP_FULL: 'This group is full. Ask the owner to make room.',
   RATE_LIMITED: 'You are doing that too fast. Please wait a moment and try again.',
+  PLAN_GENERATION_LIMIT_EXCEEDED:
+    'You have reached the maximum of 3 plan generations for this cycle.',
   INTERNAL_SERVER_ERROR: 'Could not reach the server. Check your connection and try again.',
 };
 

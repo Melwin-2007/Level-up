@@ -7,6 +7,8 @@ export const CYCLE_OPERATIONS = [
   'review.create',
   'comment.add',
   'review.complete',
+  'plan.generate',
+  'plan.approve',
   'advance',
 ] as const;
 

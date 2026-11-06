@@ -31,6 +31,35 @@ export class FakeLlmClient implements LlmClient {
       rawOutput = await handler(params as LlmGenerateParams<unknown>);
     } else if (this.defaultResponse !== null) {
       rawOutput = this.defaultResponse;
+    } else if (params.promptId === 'planner-decomposition') {
+      rawOutput = {
+        feasibility: {
+          verdict: 'feasible',
+          totalEstimatedHours: 20,
+          totalAvailableHours: 80,
+          capacityRatio: 0.25,
+          goalVerdicts: [],
+          conflicts: [],
+          rationale: 'Pacing is achievable within available capacity.',
+        },
+        milestones: [
+          {
+            goalId: '00000000-0000-0000-0000-000000000001',
+            title: 'Initial setup and scaffold',
+            targetWeek: 1,
+            estimatedMinutes: 300,
+            dependencies: [],
+          },
+          {
+            goalId: '00000000-0000-0000-0000-000000000001',
+            title: 'Core feature completion',
+            targetWeek: 2,
+            estimatedMinutes: 600,
+            dependencies: [],
+          },
+        ],
+        pacingSummary: 'Balanced weekly load across the month.',
+      };
     } else {
       rawOutput = {};
     }
