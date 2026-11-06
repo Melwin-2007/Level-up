@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 2 (In progress)
-- Current prompt: P20 (Complete, advancing to P21)
-- Branch: feat/p20-llm-gateway
+- Current prompt: P21 (Complete, advancing to P22)
+- Branch: feat/p21-planner-input-builder
 
 ## Checklist
 
@@ -30,13 +30,15 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ### Milestone 2: AI Goal Analysis & Plan Generation
 
 - [x] P20 LLM gateway
-- [ ] P21 Planner input builder
+- [x] P21 Planner input builder
 - [ ] P22 Feasibility and decomposition
 - [ ] P23 Plan generation API
 - [ ] P24 Plan approval API
 - [ ] P25 Mobile AI plan review
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented `buildPlannerInput` ensuring strict privacy isolation: queries strictly for caller's locked submission and goals, blocking foreign member leakage and validating cycle `planning` phase.
 
 - Added AI provider abstraction (`LlmClient`, `FakeLlmClient`, `GeminiLlmClient`) with Zod-validated structured outputs, 30s timeout, jittered retries, and token/cost audit logging in `ai_action_logs`.
 - Redacted API keys from all error traces and logs to guarantee zero secrets leakage.
