@@ -4,12 +4,13 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 1 (Complete)
-- Current prompt: P13 (Complete)
-- Branch: main
-- Tag: m1-done
+- Current milestone: 2 (In progress)
+- Current prompt: P20 (Complete, advancing to P21)
+- Branch: feat/p20-llm-gateway
 
 ## Checklist
+
+### Milestone 1: Foundations & Group Planning (Complete)
 
 - [x] P00 Repo bootstrap
 - [x] P01 Supabase + environment
@@ -26,7 +27,19 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P12 Mobile submission + review
 - [x] P13 Acceptance on devices + APK
 
+### Milestone 2: AI Goal Analysis & Plan Generation
+
+- [x] P20 LLM gateway
+- [ ] P21 Planner input builder
+- [ ] P22 Feasibility and decomposition
+- [ ] P23 Plan generation API
+- [ ] P24 Plan approval API
+- [ ] P25 Mobile AI plan review
+
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Added AI provider abstraction (`LlmClient`, `FakeLlmClient`, `GeminiLlmClient`) with Zod-validated structured outputs, 30s timeout, jittered retries, and token/cost audit logging in `ai_action_logs`.
+- Redacted API keys from all error traces and logs to guarantee zero secrets leakage.
 
 - Added Zod-based startup configuration validation in `apps/api/src/config/env.schema.ts` with human-readable error formatting.
 - `profiles.id` stores `auth.users.id` directly as UUID without a cross-schema foreign key constraint in Postgres, preventing Prisma P4002/P3006 multi-schema migration conflicts with Supabase's managed `auth` schema.
