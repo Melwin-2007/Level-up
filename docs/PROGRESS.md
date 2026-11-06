@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 2 (In progress)
-- Current prompt: P21 (Complete, advancing to P22)
-- Branch: feat/p21-planner-input-builder
+- Current prompt: P22 (Complete, advancing to P23)
+- Branch: feat/p22-feasibility-decomposition
 
 ## Checklist
 
@@ -31,12 +31,15 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - [x] P20 LLM gateway
 - [x] P21 Planner input builder
-- [ ] P22 Feasibility and decomposition
+- [x] P22 Feasibility and decomposition
 - [ ] P23 Plan generation API
 - [ ] P24 Plan approval API
 - [ ] P25 Mobile AI plan review
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Added Zod schemas for `FeasibilityReport` and `PlanDecomposition` in `@mp/shared` covering capacity ratios, goal verdicts, conflicts, and weekly milestones.
+- Created versioned prompt builder `buildPlannerPrompt` (`planner-decomposition` v1.0) incorporating availability, dated exceptions, locked goals, and optional user adjustment feedback.
 
 - Implemented `buildPlannerInput` ensuring strict privacy isolation: queries strictly for caller's locked submission and goals, blocking foreign member leakage and validating cycle `planning` phase.
 
