@@ -25,7 +25,7 @@ export const envSchema = z
     MAX_GROUP_MEMBERS: z.coerce.number().int().min(1).default(12),
     AI_PROVIDER: z.enum(['fake', 'gemini', 'openai']).default('fake'),
     AI_API_KEY: z.string().min(1).optional(),
-    AI_MODEL: z.string().min(1).default('gemini-2.0-flash'),
+    AI_MODEL: z.string().min(1).default('gemini-3.5-flash'),
   })
   .superRefine((data, ctx) => {
     if (data.AI_PROVIDER !== 'fake' && !data.AI_API_KEY && data.NODE_ENV !== 'test') {
