@@ -6,7 +6,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Current milestone: 2 (Complete, tagged m2-done)
 - Current prompt: P25 (Complete)
-- Branch: feat/p25-mobile-ai-plan-review
+- Branch: main
+- Next prompt: P30 (Milestone 3: Daily Task Scheduling Engine)
 
 ## Checklist
 
