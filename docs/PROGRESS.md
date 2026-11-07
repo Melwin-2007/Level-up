@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 2 (Complete, tagged m2-done)
-- Current prompt: P25 (Complete)
-- Branch: main
-- Next prompt: P30 (Milestone 3: Daily Task Scheduling Engine)
+- Current milestone: 3
+- Current prompt: P30 (Complete)
+- Branch: feat/p30-pure-scheduler
+- Next prompt: P31 (Timezone and calendar handling)
 
 ## Checklist
 
@@ -37,7 +37,18 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P24 Plan approval API
 - [x] P25 Mobile AI plan review
 
+### Milestone 3: Daily Task Scheduling Engine (In Progress)
+
+- [x] P30 Pure scheduler
+- [ ] P31 Timezone and calendar handling
+- [ ] P32 Pipeline integration
+- [ ] P33 Mobile weekly and daily planner views
+
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented pure deterministic constraint-based task scheduling engine in `packages/scheduler` (`@mp/scheduler`) with zero framework or database dependencies.
+- Enforced hard constraints: non-overlapping tasks, availability interval boundaries, dependency sequencing, deadline compliance, and daily capacity limits.
+- Guaranteed zero work silently dropped (`input.tasks.length === scheduled.length + unscheduled.length`) with explicit trade-off explanations. Verified with 100 fast-check property iterations.
 
 - Implemented `apps/mobile/app/cycles/[id]/plan.tsx` with prominent "Proposed by AI" banner on unapproved plans, feasibility capacity load bar, conflict alerts, and weekly milestone breakdown.
 - Built AI Assistant bottom sheet using plain-row layout (no chat bubbles) providing plan pacing insights and adjustment regeneration form.

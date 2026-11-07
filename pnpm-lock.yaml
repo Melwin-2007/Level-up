@@ -242,6 +242,18 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  packages/scheduler:
+    devDependencies:
+      fast-check:
+        specifier: ^3.23.2
+        version: 3.23.2
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(jsdom@26.1.0(supports-color@8.1.1))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+
   packages/shared:
     dependencies:
       zod:
