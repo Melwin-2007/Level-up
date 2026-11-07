@@ -90,3 +90,27 @@ export interface SchedulerOutput {
   violations: ConstraintViolation[];
   tradeoffs: TradeoffExplanation[];
 }
+
+export type WeekdayName =
+  'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+export type WeekdayHours = Record<WeekdayName, number>;
+
+export interface DatedException {
+  /** ISO date YYYY-MM-DD */
+  date: string;
+  hours: number;
+  reason?: string;
+}
+
+export interface MonthAvailabilityInput {
+  year: number;
+  /** Month index 1 to 12 */
+  month: number;
+  /** IANA timezone string */
+  timezone: string;
+  weeklyHours?: Partial<WeekdayHours>;
+  exceptions?: DatedException[];
+  /** Default slot start minute (defaults to 540 = 09:00) */
+  defaultStartMinute?: number;
+}

@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 3
-- Current prompt: P30 (Complete)
-- Branch: feat/p30-pure-scheduler
-- Next prompt: P31 (Timezone and calendar handling)
+- Current prompt: P31 (Complete)
+- Branch: feat/p31-timezone-calendar
+- Next prompt: P32 (Pipeline integration)
 
 ## Checklist
 
@@ -40,11 +40,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ### Milestone 3: Daily Task Scheduling Engine (In Progress)
 
 - [x] P30 Pure scheduler
-- [ ] P31 Timezone and calendar handling
+- [x] P31 Timezone and calendar handling
 - [ ] P32 Pipeline integration
 - [ ] P33 Mobile weekly and daily planner views
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented timezone & calendar availability calculator in `@mp/scheduler` (`packages/scheduler/src/calendar.ts`) computing exact available minutes per local date across month lengths (28-31 days, leap years 2028, century leap 2000 vs 1900).
+- Handled dated exception overrides (public holidays, catch-up work) and DST transitions in `America/New_York` (23h spring forward, 25h fall back) and `Europe/London`, with bidirectional `localSlotToUtc` and `utcToLocalSlot` converters and non-DST zone `Asia/Kolkata`.
 
 - Implemented pure deterministic constraint-based task scheduling engine in `packages/scheduler` (`@mp/scheduler`) with zero framework or database dependencies.
 - Enforced hard constraints: non-overlapping tasks, availability interval boundaries, dependency sequencing, deadline compliance, and daily capacity limits.
