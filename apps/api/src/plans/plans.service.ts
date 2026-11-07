@@ -19,6 +19,12 @@ import {
   PLANNER_PROMPT_VERSION,
 } from '../ai/prompts/planner-prompt.js';
 import {
+  schedule,
+  buildMonthAvailability,
+  getDaysInMonth,
+  type TaskCandidate,
+} from '@mp/scheduler';
+import {
   planDecompositionSchema,
   type GeneratePlanInput,
   type ApprovePlanInput,
@@ -32,6 +38,7 @@ export interface PlanItemResponse {
   itemType: string;
   title: string;
   description?: string | null;
+  plannedDate?: string | null;
   weekNumber?: number | null;
   estimatedMinutes: number;
   orderIndex: number;
@@ -144,6 +151,112 @@ export class PlansService {
     const versionNumber = existingCount + 1;
     const versionType = 'initial';
 
+    // Step 2 in Pipeline: Pass proposal through pure constraint scheduler
+    const availability = buildMonthAvailability({
+      year: plannerInput.cycleYear,
+      month: plannerInput.cycleMonth,
+      timezone: plannerInput.timezone,
+      weeklyHours: plannerInput.availability?.weeklyHours,
+      exceptions: plannerInput.availability?.exceptions,
+    });
+
+    const maxDailyMinutes = plannerInput.constraints?.maxDailyHours
+      ? plannerInput.constraints.maxDailyHours * 60
+      : undefined;
+
+    const chunkThreshold = maxDailyMinutes ? Math.min(maxDailyMinutes, 120) : 120;
+    const daysInMonth = getDaysInMonth(plannerInput.cycleYear, plannerInput.cycleMonth);
+    const lastDayDate = `${plannerInput.cycleYear}-${String(plannerInput.cycleMonth).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+    const taskCandidates: TaskCandidate[] = [];
+    const candidateMetaMap = new Map<
+      string,
+      { goalId: string; title: string; targetWeek: number }
+    >();
+
+    for (let mIdx = 0; mIdx < decomposition.milestones.length; mIdx++) {
+      const m = decomposition.milestones[mIdx]!;
+      const goal = plannerInput.goals.find((g) => g.id === m.goalId);
+      const priority = goal?.priority ?? 1;
+      const deadline = goal?.deadline ?? lastDayDate;
+
+      if (m.estimatedMinutes <= chunkThreshold) {
+        const taskId = `m-${mIdx}`;
+        taskCandidates.push({
+          id: taskId,
+          goalId: m.goalId,
+          title: m.title,
+          estimatedMinutes: m.estimatedMinutes,
+          priority,
+          deadline,
+          dependencies: m.dependencies,
+        });
+        candidateMetaMap.set(taskId, {
+          goalId: m.goalId,
+          title: m.title,
+          targetWeek: m.targetWeek,
+        });
+      } else {
+        const numChunks = Math.ceil(m.estimatedMinutes / chunkThreshold);
+        const baseChunkMinutes = Math.floor(m.estimatedMinutes / numChunks);
+        const remainderMinutes = m.estimatedMinutes % numChunks;
+
+        for (let c = 0; c < numChunks; c++) {
+          const taskId = `m-${mIdx}-c${c}`;
+          const duration = baseChunkMinutes + (c === 0 ? remainderMinutes : 0);
+          const prevChunkId = c > 0 ? `m-${mIdx}-c${c - 1}` : undefined;
+          const deps = prevChunkId ? [prevChunkId] : m.dependencies;
+
+          taskCandidates.push({
+            id: taskId,
+            goalId: m.goalId,
+            title: `${m.title} (Part ${c + 1}/${numChunks})`,
+            estimatedMinutes: duration,
+            priority,
+            deadline,
+            dependencies: deps,
+          });
+
+          candidateMetaMap.set(taskId, {
+            goalId: m.goalId,
+            title: `${m.title} (Part ${c + 1}/${numChunks})`,
+            targetWeek: m.targetWeek,
+          });
+        }
+      }
+    }
+
+    const schedulerOutput = schedule({
+      tasks: taskCandidates,
+      availability,
+      maxDailyMinutes,
+    });
+
+    // If scheduler flags unscheduled work, name the tradeoff in plain language
+    if (schedulerOutput.unscheduled.length > 0) {
+      decomposition.tradeoffs = schedulerOutput.tradeoffs;
+
+      if (!decomposition.feasibility.conflicts) {
+        decomposition.feasibility.conflicts = [];
+      }
+
+      for (const u of schedulerOutput.unscheduled) {
+        decomposition.feasibility.conflicts.push({
+          type: 'capacity',
+          description: `[SCHEDULER] ${u.details}`,
+          goalIds: [u.goalId],
+        });
+      }
+
+      if (decomposition.feasibility.verdict === 'feasible') {
+        decomposition.feasibility.verdict = 'tight';
+      }
+
+      if (schedulerOutput.unscheduled.length > schedulerOutput.scheduled.length) {
+        decomposition.feasibility.verdict = 'infeasible';
+      }
+    }
+
     const result = await this.prisma.$transaction(
       async (tx) => {
         const planVersion = await tx.planVersion.create({
@@ -158,7 +271,7 @@ export class PlansService {
           },
         });
 
-        const planItems = await Promise.all(
+        const milestonePlanItems = await Promise.all(
           decomposition.milestones.map((m, idx) =>
             tx.planItem.create({
               data: {
@@ -174,7 +287,34 @@ export class PlansService {
           )
         );
 
-        return { planVersion, planItems };
+        let orderIndex = decomposition.milestones.length;
+        const dailyPlanItems = await Promise.all(
+          schedulerOutput.scheduled.map((st) => {
+            const meta = candidateMetaMap.get(st.taskId);
+            const dayNum = Number(st.date.split('-')[2]);
+            const weekNumber = Math.min(5, Math.ceil(dayNum / 7));
+
+            const startH = String(Math.floor(st.startMinute / 60)).padStart(2, '0');
+            const startM = String(st.startMinute % 60).padStart(2, '0');
+            const endH = String(Math.floor(st.endMinute / 60)).padStart(2, '0');
+            const endM = String(st.endMinute % 60).padStart(2, '0');
+
+            return tx.planItem.create({
+              data: {
+                planVersionId: planVersion.id,
+                itemType: 'daily_task',
+                title: meta?.title ?? 'Daily Task',
+                description: `Scheduled: ${startH}:${startM} - ${endH}:${endM}`,
+                plannedDate: new Date(`${st.date}T00:00:00.000Z`),
+                weekNumber,
+                estimatedMinutes: st.durationMinutes,
+                orderIndex: orderIndex++,
+              },
+            });
+          })
+        );
+
+        return { planVersion, planItems: [...milestonePlanItems, ...dailyPlanItems] };
       },
       { maxWait: 15000, timeout: 30000 }
     );
@@ -197,6 +337,7 @@ export class PlansService {
         itemType: item.itemType,
         title: item.title,
         description: item.description,
+        plannedDate: item.plannedDate ? item.plannedDate.toISOString().slice(0, 10) : null,
         weekNumber: item.weekNumber,
         estimatedMinutes: item.estimatedMinutes,
         orderIndex: item.orderIndex,
@@ -259,6 +400,7 @@ export class PlansService {
         itemType: item.itemType,
         title: item.title,
         description: item.description,
+        plannedDate: item.plannedDate ? item.plannedDate.toISOString().slice(0, 10) : null,
         weekNumber: item.weekNumber,
         estimatedMinutes: item.estimatedMinutes,
         orderIndex: item.orderIndex,
@@ -431,6 +573,7 @@ export class PlansService {
         itemType: item.itemType,
         title: item.title,
         description: item.description,
+        plannedDate: item.plannedDate ? item.plannedDate.toISOString().slice(0, 10) : null,
         weekNumber: item.weekNumber,
         estimatedMinutes: item.estimatedMinutes,
         orderIndex: item.orderIndex,

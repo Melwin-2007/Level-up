@@ -46,10 +46,18 @@ export const feasibilityReportSchema = z.object({
 });
 export type FeasibilityReport = z.infer<typeof feasibilityReportSchema>;
 
+export const schedulerTradeoffSchema = z.object({
+  taskId: z.string(),
+  goalId: z.string(),
+  explanation: z.string(),
+});
+export type SchedulerTradeoff = z.infer<typeof schedulerTradeoffSchema>;
+
 export const planDecompositionSchema = z.object({
   feasibility: feasibilityReportSchema,
   milestones: z.array(planMilestoneSchema).min(1),
   pacingSummary: z.string().min(1),
+  tradeoffs: z.array(schedulerTradeoffSchema).default([]).optional(),
 });
 export type PlanDecomposition = z.infer<typeof planDecompositionSchema>;
 

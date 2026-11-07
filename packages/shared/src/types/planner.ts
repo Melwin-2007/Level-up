@@ -37,6 +37,7 @@ export interface PlanItemResponse {
   itemType: string;
   title: string;
   description?: string | null;
+  plannedDate?: string | null;
   weekNumber?: number | null;
   estimatedMinutes: number;
   orderIndex: number;

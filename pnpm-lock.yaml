@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@mp/scheduler':
+        specifier: workspace:*
+        version: link:../../packages/scheduler
       '@mp/shared':
         specifier: workspace:*
         version: link:../../packages/shared

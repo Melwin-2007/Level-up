@@ -251,10 +251,16 @@ describe('Plan Generation API (e2e - P23)', () => {
     expect(plan.versionType).toBe('initial');
     expect(plan.approvalStatus).toBe('pending');
     expect(plan.isBaseline).toBe(false);
-    expect(plan.items).toHaveLength(2);
-    expect(plan.items[0].title).toBe('Design scheduler interface and state machine');
-    expect(plan.items[0].weekNumber).toBe(1);
-    expect(plan.items[0].estimatedMinutes).toBe(600);
+
+    const milestones = plan.items.filter((i: { itemType: string }) => i.itemType === 'milestone');
+    const dailyTasks = plan.items.filter((i: { itemType: string }) => i.itemType === 'daily_task');
+
+    expect(milestones).toHaveLength(2);
+    expect(milestones[0].title).toBe('Design scheduler interface and state machine');
+    expect(milestones[0].weekNumber).toBe(1);
+    expect(milestones[0].estimatedMinutes).toBe(600);
+    expect(dailyTasks.length).toBeGreaterThan(0);
+    expect(dailyTasks[0].plannedDate).toBeDefined();
     expect(plan.planSnapshot.feasibility.verdict).toBe('feasible');
 
     // Verify persisted in DB
@@ -272,7 +278,8 @@ describe('Plan Generation API (e2e - P23)', () => {
     expect(dbPlan).not.toBeNull();
     expect(dbPlan?.approvalStatus).toBe('pending');
     expect(dbPlan?.isBaseline).toBe(false);
-    expect(dbPlan?.planItems).toHaveLength(2);
+    expect(dbPlan?.planItems.filter((i) => i.itemType === 'milestone')).toHaveLength(2);
+    expect(dbPlan?.planItems.filter((i) => i.itemType === 'daily_task').length).toBeGreaterThan(0);
   });
 
   it('should regenerate plan with adjustmentsNote and increment version number', async () => {
@@ -330,6 +337,73 @@ describe('Plan Generation API (e2e - P23)', () => {
 
     expect(res.body.planVersion).not.toBeNull();
     expect(res.body.planVersion.versionNumber).toBe(3); // latest pending
-    expect(res.body.planVersion.items).toHaveLength(2);
+    const milestones = res.body.planVersion.items.filter(
+      (i: { itemType: string }) => i.itemType === 'milestone'
+    );
+    const dailyTasks = res.body.planVersion.items.filter(
+      (i: { itemType: string }) => i.itemType === 'daily_task'
+    );
+    expect(milestones).toHaveLength(2);
+    expect(dailyTasks.length).toBeGreaterThan(0);
+  });
+
+  it('should generate plan with scheduler tradeoffs when availability is constrained', async () => {
+    // Create submission as draft first (to satisfy trigger preventing goal inserts on locked submissions), then lock
+    const subB = await prisma.monthlySubmission.create({
+      data: {
+        cycleId,
+        userId: memberB.userId,
+        status: 'draft',
+        availability: {
+          weeklyHours: {
+            monday: 0,
+            tuesday: 0,
+            wednesday: 0,
+            thursday: 0,
+            friday: 0,
+            saturday: 0,
+            sunday: 0,
+          },
+          exceptions: [],
+        },
+        constraints: { fixedCommitments: [] },
+        goals: {
+          create: [
+            {
+              title: 'Heavy Project',
+              priority: 2,
+              estimatedHours: 40,
+              deadline: new Date('2026-11-20T00:00:00.000Z'),
+              position: 0,
+            },
+          ],
+        },
+      },
+    });
+
+    await prisma.monthlySubmission.update({
+      where: { id: subB.id },
+      data: {
+        status: 'locked',
+        lockedAt: new Date(),
+      },
+    });
+
+    const res = await request(app.getHttpServer())
+      .post(`/api/v1/cycles/${cycleId}/generate-plan`)
+      .set(asUser(memberB.token))
+      .send({})
+      .expect(201);
+
+    const plan = res.body.planVersion;
+    expect(plan.userId).toBe(memberB.userId);
+    // Because available hours are 0, tasks cannot be scheduled
+    expect(plan.planSnapshot.tradeoffs?.length).toBeGreaterThan(0);
+    expect(
+      plan.planSnapshot.feasibility.conflicts.some((c: { description: string }) =>
+        c.description.includes('[SCHEDULER]')
+      )
+    ).toBe(true);
+    expect(['tight', 'infeasible']).toContain(plan.planSnapshot.feasibility.verdict);
   });
 });
