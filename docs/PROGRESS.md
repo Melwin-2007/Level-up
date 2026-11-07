@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 3
-- Current prompt: P31 (Complete)
-- Branch: feat/p31-timezone-calendar
-- Next prompt: P32 (Pipeline integration)
+- Current milestone: 4
+- Current prompt: P33 (Complete)
+- Branch: main (tagged m3-done)
+- Next prompt: P40 (Infrastructure: Redis & BullMQ)
 
 ## Checklist
 
@@ -37,21 +37,29 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P24 Plan approval API
 - [x] P25 Mobile AI plan review
 
-### Milestone 3: Daily Task Scheduling Engine (In Progress)
+### Milestone 3: Daily Task Scheduling Engine (Complete)
 
 - [x] P30 Pure scheduler
 - [x] P31 Timezone and calendar handling
-- [ ] P32 Pipeline integration
-- [ ] P33 Mobile weekly and daily planner views
+- [x] P32 Pipeline integration
+- [x] P33 Mobile weekly and daily planner views
+
+### Milestone 4: Execution, Reminders, BullMQ (Upcoming)
+
+- [ ] P40 Infrastructure (Redis + BullMQ)
+- [ ] P41 Task materialization
+- [ ] P42 Task API and logs
+- [ ] P43 Reminders
+- [ ] P44 Automatic cycle transitions
+- [ ] P45 Mobile Today and daily execution
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
-- Implemented timezone & calendar availability calculator in `@mp/scheduler` (`packages/scheduler/src/calendar.ts`) computing exact available minutes per local date across month lengths (28-31 days, leap years 2028, century leap 2000 vs 1900).
-- Handled dated exception overrides (public holidays, catch-up work) and DST transitions in `America/New_York` (23h spring forward, 25h fall back) and `Europe/London`, with bidirectional `localSlotToUtc` and `utcToLocalSlot` converters and non-DST zone `Asia/Kolkata`.
-
-- Implemented pure deterministic constraint-based task scheduling engine in `packages/scheduler` (`@mp/scheduler`) with zero framework or database dependencies.
-- Enforced hard constraints: non-overlapping tasks, availability interval boundaries, dependency sequencing, deadline compliance, and daily capacity limits.
-- Guaranteed zero work silently dropped (`input.tasks.length === scheduled.length + unscheduled.length`) with explicit trade-off explanations. Verified with 100 fast-check property iterations.
+- Embedded `MonthStrip` in mobile plan review (`apps/mobile/app/cycles/[id]/plan.tsx`) with daily scheduled workload gauge fills and active load markers.
+- Expanded weekly plan breakdown with scheduled daily tasks displaying dates, duration formatting, and titles while adhering to dark design tokens (zero raw hex literals outside `theme/tokens.ts`).
+- Integrated pure scheduler into `PlansService.generatePlan` pipeline: chunks large milestones (>120m) into sequential daily tasks, schedules tasks against member availability, and records explicit tradeoffs and conflicts when capacity is constrained.
+- Implemented timezone & calendar availability calculator in `@mp/scheduler` (`packages/scheduler/src/calendar.ts`) computing exact available minutes per local date across month lengths (28-31 days, leap years 2028, century leap 2000 vs 1900) and DST transitions (`America/New_York`, `Europe/London`).
+- Implemented pure deterministic constraint-based task scheduling engine in `packages/scheduler` (`@mp/scheduler`) with zero framework or database dependencies, verified with 100 fast-check property iterations.
 
 - Implemented `apps/mobile/app/cycles/[id]/plan.tsx` with prominent "Proposed by AI" banner on unapproved plans, feasibility capacity load bar, conflict alerts, and weekly milestone breakdown.
 - Built AI Assistant bottom sheet using plain-row layout (no chat bubbles) providing plan pacing insights and adjustment regeneration form.

@@ -45,6 +45,8 @@ Agents: if something is not covered here, take the simplest option, append a new
 36. AI plan review UI: Follows DESIGN.md strictly (no chat bubbles). Plain row structure for questions and answers with high-contrast badge "Proposed by AI" on all unapproved plans.
 37. Pure Scheduler package (`packages/scheduler`): A standalone, pure TypeScript library (`@mp/scheduler`) with no dependencies on NestJS or database ORMs. Solves task assignment over available slots with greedy Earliest Deadline First (EDF) + priority weights, hard constraint guarantees (no overlap, deadline satisfaction, dependency ordering, daily capacity), and full accounting of unscheduled tasks with explicit trade-off explanations. Verified with property-based testing via `fast-check`.
 38. Timezone and calendar calculation (`packages/scheduler/src/calendar.ts`): Pure functions for month duration with leap-year support, local day-of-week mapping in IANA timezones, dated exception overrides, bidirectional local slot to UTC conversion, and day length detection across DST transitions (23h spring forward, 25h fall back) with capacity clamping.
+39. Pipeline scheduler integration (`PlansService.generatePlan`): Chunks milestones into sequential daily tasks, schedules against member availability using `@mp/scheduler`, maps tradeoffs/conflicts to plan snapshot feasibility, and transactionally persists both milestone and daily task `plan_items`.
+40. Mobile Weekly & Daily Planner Views: Integrates `MonthStrip` daily scheduled load gauges and active load markers, and expands weekly cards to show scheduled daily tasks with date badges, duration formatting, and zero hex literals outside `theme/tokens.ts`.
 
 ## Open questions for the owner (answer when convenient)
 
