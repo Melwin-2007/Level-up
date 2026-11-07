@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   NotFoundException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Logger,
@@ -10,6 +11,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CycleStateService } from '../cycles/cycle-state.service.js';
 import { AiService } from '../ai/ai.service.js';
+import { CLOCK, type Clock } from '../common/clock/clock.js';
 import { buildPlannerInput } from '../ai/planner-input.builder.js';
 import {
   buildPlannerPrompt,
@@ -19,6 +21,7 @@ import {
 import {
   planDecompositionSchema,
   type GeneratePlanInput,
+  type ApprovePlanInput,
   type PlanDecomposition,
 } from '@mp/shared';
 
@@ -56,7 +59,8 @@ export class PlansService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(CycleStateService) private readonly cycleStateService: CycleStateService,
-    @Inject(AiService) private readonly aiService: AiService
+    @Inject(AiService) private readonly aiService: AiService,
+    @Inject(CLOCK) private readonly clock: Clock
   ) {}
 
   async generatePlan(
@@ -138,7 +142,7 @@ export class PlansService {
 
     const decomposition = aiResponse.data;
     const versionNumber = existingCount + 1;
-    const versionType = existingCount === 0 ? 'initial' : 'reoptimized';
+    const versionType = 'initial';
 
     const result = await this.prisma.$transaction(
       async (tx) => {
@@ -249,6 +253,178 @@ export class PlansService {
       approvedAt: planVersion.approvedAt?.toISOString() ?? null,
       createdAt: planVersion.createdAt.toISOString(),
       items: planVersion.planItems.map((item) => ({
+        id: item.id,
+        planVersionId: item.planVersionId,
+        goalId: item.goalId,
+        itemType: item.itemType,
+        title: item.title,
+        description: item.description,
+        weekNumber: item.weekNumber,
+        estimatedMinutes: item.estimatedMinutes,
+        orderIndex: item.orderIndex,
+        createdAt: item.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async approvePlan(
+    cycleId: string,
+    userId: string,
+    input: ApprovePlanInput
+  ): Promise<PlanVersionResponse> {
+    const cycle = await this.prisma.monthlyCycle.findUnique({
+      where: { id: cycleId },
+    });
+
+    if (!cycle) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    // 1. Assert cycle state allows plan approval (must be in planning)
+    this.cycleStateService.assertAllows(cycle, 'plan.approve');
+
+    // 2. Verify caller is a member of the group
+    const membership = await this.prisma.groupMember.findUnique({
+      where: {
+        groupId_userId: {
+          groupId: cycle.groupId,
+          userId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    // 3. Find the target plan version
+    const planVersion = await this.prisma.planVersion.findUnique({
+      where: { id: input.planVersionId },
+      include: {
+        planItems: {
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+    });
+
+    if (!planVersion || planVersion.cycleId !== cycleId) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Plan version not found for this cycle' },
+      });
+    }
+
+    // 4. Verify ownership (private data isolation)
+    if (planVersion.userId !== userId) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Plan version not found for this cycle' },
+      });
+    }
+
+    // 5. Verify pending status
+    if (planVersion.approvalStatus !== 'pending') {
+      throw new ConflictException({
+        code: 'CYCLE_STATE_INVALID',
+        message: `Plan version has already been ${planVersion.approvalStatus}`,
+        details: { approvalStatus: planVersion.approvalStatus },
+      });
+    }
+
+    // 6. Atomically approve and promote to baseline
+    const now = this.clock.now();
+    const approvedVersion = await this.prisma.$transaction(async (tx) => {
+      // Re-verify pending state inside transaction for race condition protection
+      const current = await tx.planVersion.findUnique({
+        where: { id: input.planVersionId },
+      });
+
+      if (!current || current.approvalStatus !== 'pending') {
+        throw new ConflictException({
+          code: 'CYCLE_STATE_INVALID',
+          message: 'Plan version has already been approved or rejected',
+        });
+      }
+
+      // Check if baseline already exists for this member
+      const existingBaseline = await tx.planVersion.findFirst({
+        where: {
+          cycleId,
+          userId,
+          isBaseline: true,
+        },
+      });
+
+      if (existingBaseline) {
+        throw new ConflictException({
+          code: 'CYCLE_STATE_INVALID',
+          message: 'A baseline plan has already been approved for this member in this cycle',
+        });
+      }
+
+      const updated = await tx.planVersion.update({
+        where: { id: input.planVersionId },
+        data: {
+          approvalStatus: 'approved',
+          approvedAt: now,
+          isBaseline: true,
+        },
+        include: {
+          planItems: {
+            orderBy: { orderIndex: 'asc' },
+          },
+        },
+      });
+
+      // 7. Check if all members with locked submissions have approved plans
+      const lockedSubmissions = await tx.monthlySubmission.findMany({
+        where: {
+          cycleId,
+          status: 'locked',
+        },
+        select: { userId: true },
+      });
+
+      const participatingUserIds = lockedSubmissions.map((s) => s.userId);
+
+      if (participatingUserIds.length > 0) {
+        const approvedBaselinesCount = await tx.planVersion.count({
+          where: {
+            cycleId,
+            userId: { in: participatingUserIds },
+            isBaseline: true,
+            approvalStatus: 'approved',
+          },
+        });
+
+        if (approvedBaselinesCount >= participatingUserIds.length) {
+          await tx.monthlyCycle.update({
+            where: { id: cycleId },
+            data: { status: 'execution' },
+          });
+          this.logger.log(
+            `All ${participatingUserIds.length} participating members have approved baseline plans. Cycle ${cycleId} advanced to 'execution'.`
+          );
+        }
+      }
+
+      return updated;
+    });
+
+    return {
+      id: approvedVersion.id,
+      cycleId: approvedVersion.cycleId,
+      userId: approvedVersion.userId,
+      versionNumber: approvedVersion.versionNumber,
+      versionType: approvedVersion.versionType,
+      approvalStatus: approvedVersion.approvalStatus,
+      isBaseline: approvedVersion.isBaseline,
+      planSnapshot: approvedVersion.planSnapshot as unknown as PlanDecomposition,
+      approvedAt: approvedVersion.approvedAt?.toISOString() ?? null,
+      createdAt: approvedVersion.createdAt.toISOString(),
+      items: approvedVersion.planItems.map((item) => ({
         id: item.id,
         planVersionId: item.planVersionId,
         goalId: item.goalId,

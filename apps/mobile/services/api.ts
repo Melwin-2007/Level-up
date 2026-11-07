@@ -38,8 +38,6 @@ export const ERROR_MESSAGES: Record<ApiErrorCode, string> = {
   RATE_LIMITED: 'You are doing that too fast. Please wait a moment and try again.',
   PLAN_GENERATION_LIMIT_EXCEEDED:
     'You have reached the maximum of 3 plan generations for this cycle.',
-  PLAN_GENERATION_LIMIT_EXCEEDED:
-    'You have reached the maximum of 3 plan generations for this cycle.',
   INTERNAL_SERVER_ERROR: 'Could not reach the server. Check your connection and try again.',
 };
 

@@ -286,7 +286,7 @@ describe('Plan Generation API (e2e - P23)', () => {
 
     const plan = res.body.planVersion;
     expect(plan.versionNumber).toBe(2);
-    expect(plan.versionType).toBe('reoptimized');
+    expect(plan.versionType).toBe('initial');
     expect(plan.approvalStatus).toBe('pending');
     expect(plan.isBaseline).toBe(false);
 

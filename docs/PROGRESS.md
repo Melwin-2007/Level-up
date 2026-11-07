@@ -5,8 +5,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 2 (In progress)
-- Current prompt: P23 (Complete, advancing to P24)
-- Branch: feat/p23-plan-generation
+- Current prompt: P24 (Complete, advancing to P25)
+- Branch: feat/p24-plan-approval
 
 ## Checklist
 
@@ -33,10 +33,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P21 Planner input builder
 - [x] P22 Feasibility and decomposition
 - [x] P23 Plan generation API
-- [ ] P24 Plan approval API
+- [x] P24 Plan approval API
 - [ ] P25 Mobile AI plan review
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented `POST /cycles/:id/approve-plan` in `PlansService` & `PlansController`, atomically setting `approval_status = 'approved'`, `is_baseline = true`, and `approved_at = clock.now()`.
+- Added race protection and baseline uniqueness verification; prevented duplicate approvals or cross-member plan approvals.
+- Implemented automatic cycle transition from `planning` to `execution` when all participating members (locked submissions) approve baseline plans.
 
 - Implemented `POST /cycles/:id/generate-plan` and `GET /cycles/:id/plan` in `PlansService` & `PlansController`.
 - Enforced 3 generations per cycle per member rate limit returning 429 `PLAN_GENERATION_LIMIT_EXCEEDED`.

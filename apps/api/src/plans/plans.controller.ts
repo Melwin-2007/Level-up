@@ -8,7 +8,12 @@ import {
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
-import { generatePlanInputSchema, type GeneratePlanInput } from '@mp/shared';
+import {
+  generatePlanInputSchema,
+  type GeneratePlanInput,
+  approvePlanInputSchema,
+  type ApprovePlanInput,
+} from '@mp/shared';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import { PlansService, type PlanVersionResponse } from './plans.service.js';
@@ -24,6 +29,16 @@ export class PlansController {
     @Body(new ZodValidationPipe(generatePlanInputSchema)) body: GeneratePlanInput
   ): Promise<{ planVersion: PlanVersionResponse }> {
     const planVersion = await this.plansService.generatePlan(cycleId, user.userId, body);
+    return { planVersion };
+  }
+
+  @Post('approve-plan')
+  async approvePlan(
+    @CurrentUser() user: { userId: string },
+    @Param('id', new ParseUUIDPipe()) cycleId: string,
+    @Body(new ZodValidationPipe(approvePlanInputSchema)) body: ApprovePlanInput
+  ): Promise<{ planVersion: PlanVersionResponse }> {
+    const planVersion = await this.plansService.approvePlan(cycleId, user.userId, body);
     return { planVersion };
   }
 
