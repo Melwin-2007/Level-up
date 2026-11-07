@@ -1,6 +1,11 @@
 import '../global.css';
 import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  document.documentElement.classList.add('dark');
+}
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -72,7 +77,12 @@ function NavigationRouter(): React.ReactNode {
       if (!isOnboarding) {
         router.replace('/onboarding');
       }
-    } else if (inAuthGroup || isOnboarding || !firstSegment || firstSegment === 'index') {
+    } else if (
+      inAuthGroup ||
+      isOnboarding ||
+      !firstSegment ||
+      (firstSegment as string) === 'index'
+    ) {
       router.replace('/(tabs)');
     }
   }, [session, hasProfile, isLoading, isInitialized, segments, router]);
