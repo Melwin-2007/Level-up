@@ -205,4 +205,73 @@ describe('PlanReviewScreen (Mobile - P25)', () => {
       planVersionId: 'plan-1',
     });
   });
+
+  it('renders MonthStrip and scheduled daily tasks within weekly breakdown', () => {
+    const planWithDailyTasks: PlanVersionResponse = {
+      ...mockPlan,
+      items: [
+        {
+          id: 'task-1',
+          planVersionId: 'plan-1',
+          goalId: '11111111-1111-1111-1111-111111111111',
+          itemType: 'daily_task',
+          title: 'Draft scheduler interface (Day 1)',
+          description: 'Core interfaces and types',
+          plannedDate: '2026-11-04T00:00:00.000Z',
+          weekNumber: 1,
+          estimatedMinutes: 90,
+          orderIndex: 0,
+          createdAt: '2026-11-01T12:00:00.000Z',
+        },
+        {
+          id: 'task-2',
+          planVersionId: 'plan-1',
+          goalId: '11111111-1111-1111-1111-111111111111',
+          itemType: 'daily_task',
+          title: 'Implement pure scheduler function',
+          description: 'Knapsack constraint solver',
+          plannedDate: '2026-11-05T00:00:00.000Z',
+          weekNumber: 1,
+          estimatedMinutes: 120,
+          orderIndex: 1,
+          createdAt: '2026-11-01T12:00:00.000Z',
+        },
+      ],
+    };
+
+    jest.spyOn(usePlansHook, 'usePlan').mockReturnValue({
+      data: planWithDailyTasks,
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    } as unknown as ReturnType<typeof usePlansHook.usePlan>);
+
+    render(<PlanReviewScreen />);
+
+    // Month strip is rendered
+    expect(screen.getByTestId('plan-month-strip')).toBeTruthy();
+    expect(screen.getByText('Daily Scheduled Load')).toBeTruthy();
+    expect(screen.getByText('2 active days')).toBeTruthy();
+
+    // Weekly breakdown contains daily tasks section
+    expect(screen.getByTestId('week-daily-tasks-1')).toBeTruthy();
+    expect(screen.getByText('Draft scheduler interface (Day 1)')).toBeTruthy();
+    expect(screen.getByText('Implement pure scheduler function')).toBeTruthy();
+    expect(screen.getByText('Nov 4')).toBeTruthy();
+    expect(screen.getByText('Nov 5')).toBeTruthy();
+    expect(screen.getByText('1h 30m')).toBeTruthy();
+    expect(screen.getAllByText('2h').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('complies with design tokens: zero raw hex literals outside tokens.ts', () => {
+    const fs = jest.requireActual<typeof import('fs')>('fs');
+    const path = jest.requireActual<typeof import('path')>('path');
+    const planFile = path.resolve(__dirname, '../../app/cycles/[id]/plan.tsx');
+    const content = fs.readFileSync(planFile, 'utf-8');
+
+    // Matches #RGB, #RGBA, #RRGGBB, #RRGGBBAA
+    const hexRegex = /#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
+    const matches = content.match(hexRegex);
+    expect(matches).toBeNull();
+  });
 });

@@ -23,12 +23,50 @@ import {
   Sheet,
   EmptyState,
   ErrorBar,
+  MonthStrip,
+  type Marker,
 } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useCycle } from '@/hooks/use-cycles';
 import { usePlan, useGeneratePlanMutation, useApprovePlanMutation } from '@/hooks/use-plans';
 import { formatMonthName } from '@/services/dates';
 import { mapApiError } from '@/services/api';
+
+function formatTaskDate(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const clean = dateStr.split('T')[0];
+  const parts = clean?.split('-');
+  if (!parts || parts.length !== 3) return dateStr;
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const part1 = parts[1];
+  const part2 = parts[2];
+  if (!part1 || !part2) return dateStr;
+  const monthIdx = parseInt(part1, 10) - 1;
+  const day = parseInt(part2, 10);
+  const mName = monthNames[monthIdx] ?? part1;
+  return `${mName} ${day}`;
+}
+
+function formatMinutes(minutes?: number | null): string {
+  if (!minutes || minutes <= 0) return '0m';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  return rem > 0 ? `${hours}h ${rem}m` : `${hours}h`;
+}
 
 export default function PlanReviewScreen(): React.ReactNode {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -88,6 +126,84 @@ export default function PlanReviewScreen(): React.ReactNode {
 
   // Also extract plan items from response if available
   const items: PlanItemResponse[] = plan?.items ?? [];
+
+  // Group daily tasks by week number (1 to 5)
+  const dailyTasksByWeek: Record<number, PlanItemResponse[]> = {
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+  };
+
+  // Map daily minutes for MonthStrip load gauges
+  const dailyMinutesMap: Record<number, number> = {};
+
+  for (const item of items) {
+    if (item.itemType === 'daily_task') {
+      let w = item.weekNumber;
+      if (!w || w < 1 || w > 5) {
+        if (item.plannedDate) {
+          const day = parseInt(item.plannedDate.split('T')[0]?.split('-')[2] ?? '', 10);
+          if (!isNaN(day)) {
+            w = Math.min(5, Math.max(1, Math.ceil(day / 7)));
+          }
+        }
+      }
+      const finalWeek = w && w >= 1 && w <= 5 ? w : 1;
+      dailyTasksByWeek[finalWeek]?.push(item);
+
+      if (item.plannedDate) {
+        const day = parseInt(item.plannedDate.split('T')[0]?.split('-')[2] ?? '', 10);
+        if (!isNaN(day)) {
+          dailyMinutesMap[day] = (dailyMinutesMap[day] ?? 0) + (item.estimatedMinutes ?? 0);
+        }
+      }
+    }
+  }
+
+  // Sort daily tasks chronologically per week
+  for (const w of weeks) {
+    dailyTasksByWeek[w]?.sort((a, b) => {
+      if (a.plannedDate && b.plannedDate && a.plannedDate !== b.plannedDate) {
+        return a.plannedDate.localeCompare(b.plannedDate);
+      }
+      return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
+    });
+  }
+
+  // Compute fill ratios for MonthStrip
+  const dailyFills: Record<number, number> = {};
+  const peakMinutes = Math.max(120, ...Object.values(dailyMinutesMap));
+  for (const [dayStr, minutes] of Object.entries(dailyMinutesMap)) {
+    const day = Number(dayStr);
+    if (minutes > 0) {
+      const ratio = Math.min(1.0, minutes / peakMinutes);
+      dailyFills[day] = Math.max(0.15, Math.round(ratio * 100) / 100);
+    }
+  }
+
+  // Daily markers on MonthStrip: deadlines and scheduled load markers
+  const dailyMarkers: Marker[] = [];
+  if (cycle?.submissionDeadline) {
+    const d = new Date(cycle.submissionDeadline);
+    if (d.getUTCFullYear() === cycle.year && d.getUTCMonth() + 1 === cycle.month) {
+      dailyMarkers.push({ day: d.getUTCDate(), label: 'sub' });
+    }
+  }
+  if (cycle?.reviewDeadline) {
+    const d = new Date(cycle.reviewDeadline);
+    if (d.getUTCFullYear() === cycle.year && d.getUTCMonth() + 1 === cycle.month) {
+      dailyMarkers.push({ day: d.getUTCDate(), label: 'rev' });
+    }
+  }
+  for (const [dayStr, minutes] of Object.entries(dailyMinutesMap)) {
+    const day = Number(dayStr);
+    if (!dailyMarkers.some((m) => m.day === day)) {
+      const hours = (minutes / 60).toFixed(0);
+      dailyMarkers.push({ day, label: `${hours}h` });
+    }
+  }
 
   const handleRegenerate = async (): Promise<void> => {
     try {
@@ -218,6 +334,33 @@ export default function PlanReviewScreen(): React.ReactNode {
       ) : (
         /* Plan Content */
         <View style={styles.content}>
+          {/* Month Strip with Daily Planned Load */}
+          {cycle ? (
+            <View style={styles.monthStripWrapper} testID="plan-month-strip">
+              <Row style={styles.monthStripLabelRow}>
+                <Text variant="small" color="ink">
+                  Daily Scheduled Load
+                </Text>
+                <Text variant="micro" color="ash" tabularNums={true}>
+                  {Object.keys(dailyMinutesMap).length} active day
+                  {Object.keys(dailyMinutesMap).length === 1 ? '' : 's'}
+                </Text>
+              </Row>
+              <MonthStrip
+                year={cycle.year}
+                month={cycle.month}
+                today={
+                  new Date().getFullYear() === cycle.year &&
+                  new Date().getMonth() + 1 === cycle.month
+                    ? new Date().getDate()
+                    : undefined
+                }
+                fills={dailyFills}
+                markers={dailyMarkers}
+              />
+            </View>
+          ) : null}
+
           {/* 1. Feasibility Summary Card */}
           {feasibility ? (
             <View style={styles.card}>
@@ -322,13 +465,21 @@ export default function PlanReviewScreen(): React.ReactNode {
 
           {weeks.map((week) => {
             const weekMilestones = milestonesByWeek[week] ?? [];
-            if (weekMilestones.length === 0 && week > 4) return null;
+            const weekDailyTasks = dailyTasksByWeek[week] ?? [];
+            if (weekMilestones.length === 0 && weekDailyTasks.length === 0 && week > 4) return null;
             const isExpanded = expandedWeeks[week] ?? true;
-            const weekTotalMinutes = weekMilestones.reduce(
+            const weekMilestoneMinutes = weekMilestones.reduce(
               (acc, m) => acc + (m.estimatedMinutes ?? 0),
               0
             );
-            const weekHours = (weekTotalMinutes / 60).toFixed(1);
+            const weekDailyMinutes = weekDailyTasks.reduce(
+              (acc, t) => acc + (t.estimatedMinutes ?? 0),
+              0
+            );
+            const weekDisplayMinutes =
+              weekDailyMinutes > 0 ? weekDailyMinutes : weekMilestoneMinutes;
+            const weekHours = (weekDisplayMinutes / 60).toFixed(1);
+            const weekDailyHours = (weekDailyMinutes / 60).toFixed(1);
 
             return (
               <View key={week} style={styles.weekCard} testID={`week-card-${week}`}>
@@ -344,8 +495,11 @@ export default function PlanReviewScreen(): React.ReactNode {
                         Week {week}
                       </Text>
                       <Text variant="micro" color="ash" tabularNums={true}>
-                        {weekMilestones.length} milestone{weekMilestones.length === 1 ? '' : 's'} •{' '}
-                        {weekHours}h
+                        {weekMilestones.length} milestone{weekMilestones.length === 1 ? '' : 's'}
+                        {weekDailyTasks.length > 0
+                          ? ` • ${weekDailyTasks.length} task${weekDailyTasks.length === 1 ? '' : 's'}`
+                          : ''}{' '}
+                        • {weekHours}h
                       </Text>
                     </View>
                     {isExpanded ? (
@@ -358,31 +512,92 @@ export default function PlanReviewScreen(): React.ReactNode {
 
                 {isExpanded ? (
                   <View style={styles.weekContent}>
-                    {weekMilestones.length === 0 ? (
+                    {weekMilestones.length === 0 && weekDailyTasks.length === 0 ? (
                       <Text variant="small" color="ash" style={styles.emptyWeekText}>
-                        No milestones scheduled for this week.
+                        No milestones or daily tasks scheduled for this week.
                       </Text>
-                    ) : (
-                      weekMilestones.map((milestone, idx) => (
-                        <View key={idx} style={styles.milestoneItem}>
-                          <Row style={styles.milestoneTitleRow}>
-                            <View style={styles.bulletPoint} />
-                            <Text variant="body" color="ink" style={styles.milestoneTitle}>
-                              {milestone.title}
-                            </Text>
-                            <Text variant="small" color="ash" tabularNums={true}>
-                              {((milestone.estimatedMinutes ?? 0) / 60).toFixed(1)}h
-                            </Text>
-                          </Row>
+                    ) : null}
 
-                          {milestone.description ? (
-                            <Text variant="micro" color="ash" style={styles.milestoneDesc}>
-                              {milestone.description}
-                            </Text>
-                          ) : null}
-                        </View>
-                      ))
-                    )}
+                    {/* Milestones */}
+                    {weekMilestones.length > 0 ? (
+                      <View style={styles.milestonesSection}>
+                        {weekMilestones.map((milestone, idx) => (
+                          <View key={idx} style={styles.milestoneItem}>
+                            <Row style={styles.milestoneTitleRow}>
+                              <View style={styles.bulletPoint} />
+                              <Text variant="body" color="ink" style={styles.milestoneTitle}>
+                                {milestone.title}
+                              </Text>
+                              <Text variant="small" color="ash" tabularNums={true}>
+                                {((milestone.estimatedMinutes ?? 0) / 60).toFixed(1)}h
+                              </Text>
+                            </Row>
+
+                            {milestone.description ? (
+                              <Text variant="micro" color="ash" style={styles.milestoneDesc}>
+                                {milestone.description}
+                              </Text>
+                            ) : null}
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
+
+                    {/* Scheduled Daily Tasks */}
+                    {weekDailyTasks.length > 0 ? (
+                      <View style={styles.dailyTasksSection} testID={`week-daily-tasks-${week}`}>
+                        {weekMilestones.length > 0 ? (
+                          <Divider style={styles.dailyTasksDivider} />
+                        ) : null}
+                        <Row style={styles.subSectionHeader}>
+                          <Text variant="small" color="ink" style={styles.subSectionTitle}>
+                            Scheduled Daily Tasks
+                          </Text>
+                          <Text variant="micro" color="ash" tabularNums={true}>
+                            {weekDailyTasks.length} task{weekDailyTasks.length === 1 ? '' : 's'} •{' '}
+                            {weekDailyHours}h
+                          </Text>
+                        </Row>
+                        {weekDailyTasks.map((task) => (
+                          <View
+                            key={task.id}
+                            style={styles.dailyTaskItem}
+                            testID={`daily-task-${task.id}`}
+                          >
+                            <Row style={styles.dailyTaskRow}>
+                              <View style={styles.taskDateBadge}>
+                                <Text
+                                  variant="micro"
+                                  color="flare"
+                                  tabularNums={true}
+                                  style={styles.taskDateText}
+                                >
+                                  {formatTaskDate(task.plannedDate)}
+                                </Text>
+                              </View>
+                              <View style={styles.dailyTaskDetails}>
+                                <Text variant="body" color="ink" style={styles.dailyTaskTitle}>
+                                  {task.title}
+                                </Text>
+                                {task.description ? (
+                                  <Text variant="micro" color="ash" style={styles.dailyTaskDesc}>
+                                    {task.description}
+                                  </Text>
+                                ) : null}
+                              </View>
+                              <Text
+                                variant="small"
+                                color="ash"
+                                tabularNums={true}
+                                style={styles.taskDuration}
+                              >
+                                {formatMinutes(task.estimatedMinutes)}
+                              </Text>
+                            </Row>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
               </View>
@@ -626,6 +841,17 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.unit * 4,
   },
+  monthStripWrapper: {
+    paddingVertical: spacing.unit * 2,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+    marginBottom: spacing.unit * 2,
+  },
+  monthStripLabelRow: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.unit,
+  },
   card: {
     backgroundColor: colors.wash,
     borderColor: colors.rule,
@@ -734,6 +960,57 @@ const styles = StyleSheet.create({
   emptyWeekText: {
     paddingTop: spacing.unit * 2,
     fontStyle: 'italic',
+  },
+  milestonesSection: {
+    gap: spacing.unit * 2,
+  },
+  dailyTasksSection: {
+    marginTop: spacing.unit * 2,
+    gap: spacing.unit,
+  },
+  dailyTasksDivider: {
+    marginBottom: spacing.unit * 2,
+  },
+  subSectionHeader: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.unit,
+  },
+  subSectionTitle: {
+    fontWeight: '600',
+  },
+  dailyTaskItem: {
+    paddingVertical: spacing.unit,
+  },
+  dailyTaskRow: {
+    alignItems: 'flex-start',
+    gap: spacing.unit * 2,
+  },
+  taskDateBadge: {
+    paddingHorizontal: spacing.unit,
+    paddingVertical: 2,
+    borderRadius: radius.cell,
+    backgroundColor: colors.wash,
+    borderWidth: 1,
+    borderColor: colors.rule,
+    minWidth: 46,
+    alignItems: 'center',
+  },
+  taskDateText: {
+    fontWeight: '600',
+  },
+  dailyTaskDetails: {
+    flex: 1,
+    gap: 2,
+  },
+  dailyTaskTitle: {
+    lineHeight: 20,
+  },
+  dailyTaskDesc: {
+    lineHeight: 16,
+  },
+  taskDuration: {
+    marginTop: 2,
   },
   milestoneItem: {
     paddingTop: spacing.unit * 2,
