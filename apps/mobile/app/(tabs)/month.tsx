@@ -253,6 +253,8 @@ export default function MonthScreen(): React.ReactNode {
                   router.push(`/cycles/${cycle.id}/submission`);
                 } else if (nextAction.action === 'review_goals') {
                   router.push(`/cycles/${cycle.id}/review`);
+                } else if (nextAction.action === 'view_plan') {
+                  router.push(`/cycles/${cycle.id}/plan`);
                 } else if (nextAction.action === 'create_cycle') {
                   setCreateCycleSheetOpen(true);
                 }

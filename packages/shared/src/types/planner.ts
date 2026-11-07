@@ -3,6 +3,7 @@ import type {
   AvailabilityInput,
   ConstraintsInput,
 } from '../validation/submissions.js';
+import type { PlanDecomposition } from '../validation/planner.js';
 
 export interface PlannerGoal {
   id: string;
@@ -27,4 +28,31 @@ export interface PlannerInput {
   availability: AvailabilityInput;
   constraints: ConstraintsInput;
   historicalStats: null;
+}
+
+export interface PlanItemResponse {
+  id: string;
+  planVersionId: string;
+  goalId?: string | null;
+  itemType: string;
+  title: string;
+  description?: string | null;
+  weekNumber?: number | null;
+  estimatedMinutes: number;
+  orderIndex: number;
+  createdAt: string;
+}
+
+export interface PlanVersionResponse {
+  id: string;
+  cycleId: string;
+  userId: string;
+  versionNumber: number;
+  versionType: string;
+  approvalStatus: string;
+  isBaseline: boolean;
+  planSnapshot: PlanDecomposition;
+  approvedAt: string | null;
+  createdAt: string;
+  items: PlanItemResponse[];
 }

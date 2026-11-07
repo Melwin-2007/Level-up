@@ -4,9 +4,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 2 (In progress)
-- Current prompt: P24 (Complete, advancing to P25)
-- Branch: feat/p24-plan-approval
+- Current milestone: 2 (Complete, tagged m2-done)
+- Current prompt: P25 (Complete)
+- Branch: feat/p25-mobile-ai-plan-review
 
 ## Checklist
 
@@ -27,16 +27,20 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P12 Mobile submission + review
 - [x] P13 Acceptance on devices + APK
 
-### Milestone 2: AI Goal Analysis & Plan Generation
+### Milestone 2: AI Goal Analysis & Plan Generation (Complete)
 
 - [x] P20 LLM gateway
 - [x] P21 Planner input builder
 - [x] P22 Feasibility and decomposition
 - [x] P23 Plan generation API
 - [x] P24 Plan approval API
-- [ ] P25 Mobile AI plan review
+- [x] P25 Mobile AI plan review
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented `apps/mobile/app/cycles/[id]/plan.tsx` with prominent "Proposed by AI" banner on unapproved plans, feasibility capacity load bar, conflict alerts, and weekly milestone breakdown.
+- Built AI Assistant bottom sheet using plain-row layout (no chat bubbles) providing plan pacing insights and adjustment regeneration form.
+- Added baseline approval flow with confirmation sheet and atomic lock; verified zero hex literals outside `theme/tokens.ts`.
 
 - Implemented `POST /cycles/:id/approve-plan` in `PlansService` & `PlansController`, atomically setting `approval_status = 'approved'`, `is_baseline = true`, and `approved_at = clock.now()`.
 - Added race protection and baseline uniqueness verification; prevented duplicate approvals or cross-member plan approvals.
