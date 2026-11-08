@@ -24,3 +24,18 @@ export type PlanApprovalStatus = (typeof PLAN_APPROVAL_STATUSES)[number];
 export const PLAN_VERSION_TYPES = ['initial', 'reoptimized'] as const;
 
 export type PlanVersionType = (typeof PLAN_VERSION_TYPES)[number];
+
+export const TASK_STATUSES = [
+  'pending',
+  'in_progress',
+  'paused',
+  'completed',
+  'postponed',
+  'cancelled',
+] as const;
+
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+export const TASK_ACTIONS = ['start', 'pause', 'complete', 'postpone'] as const;
+
+export type TaskAction = (typeof TASK_ACTIONS)[number];

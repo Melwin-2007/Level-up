@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 4
-- Current prompt: P41 (Complete)
-- Branch: feat/p41-task-materialization
-- Next prompt: P42 (Task API and Logs)
+- Current prompt: P42 (Complete)
+- Branch: feat/p42-task-api-logs
+- Next prompt: P43 (Reminders and Notifications)
 
 ## Checklist
 
@@ -48,7 +48,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - [x] P40 Infrastructure (Redis + BullMQ)
 - [x] P41 Task materialization
-- [ ] P42 Task API and logs
+- [x] P42 Task API and logs
+- [ ] P43 Reminders
 - [ ] P42 Task API and logs
 - [ ] P43 Reminders
 - [ ] P44 Automatic cycle transitions
@@ -56,6 +57,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented task execution endpoints in `TasksService` & `TasksController`: `GET /tasks`, `GET /tasks/:id`, and `POST /tasks/:id/log` supporting `start`, `pause`, `complete`, and `postpone` with `Idempotency-Key` header deduplication and append-only `task_logs`.
 - Added task materialization in `PlansService.approvePlan`: upon promoting a plan version to baseline, all `daily_task` plan items are materialized into `tasks` linked to the cycle, goal, plan item, and scheduled date, guarding idempotency against re-materialization.
 - Added Redis and BullMQ infrastructure with in-memory fallback for test and non-redis environments (`JobsService`), supporting queues `cycles` and `reminders` with delay, retry, worker registration, and `GET /admin/queues` status endpoint.
 - Embedded `MonthStrip` in mobile plan review (`apps/mobile/app/cycles/[id]/plan.tsx`) with daily scheduled workload gauge fills and active load markers.
