@@ -1,12 +1,24 @@
 import { Module, Global } from '@nestjs/common';
-import { redisProvider } from './redis.provider';
-import { JobsService } from './jobs.service';
-import { JobsController } from './jobs.controller';
+import { PrismaModule } from '../prisma/prisma.module.js';
+import { CLOCK, SystemClock } from '../common/clock/clock.js';
+import { redisProvider } from './redis.provider.js';
+import { JobsService } from './jobs.service.js';
+import { JobsController } from './jobs.controller.js';
+import { RemindersWorker } from './reminders.worker.js';
 
 @Global()
 @Module({
+  imports: [PrismaModule],
   controllers: [JobsController],
-  providers: [redisProvider, JobsService],
-  exports: [JobsService],
+  providers: [
+    redisProvider,
+    JobsService,
+    RemindersWorker,
+    {
+      provide: CLOCK,
+      useClass: SystemClock,
+    },
+  ],
+  exports: [JobsService, RemindersWorker],
 })
 export class JobsModule {}

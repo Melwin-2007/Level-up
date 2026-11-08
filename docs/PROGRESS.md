@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 4
-- Current prompt: P42 (Complete)
-- Branch: feat/p42-task-api-logs
-- Next prompt: P43 (Reminders and Notifications)
+- Current prompt: P43 (Complete)
+- Branch: feat/p43-reminders
+- Next prompt: P44 (Automatic Cycle Transitions)
 
 ## Checklist
 
@@ -49,7 +49,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P40 Infrastructure (Redis + BullMQ)
 - [x] P41 Task materialization
 - [x] P42 Task API and logs
-- [ ] P43 Reminders
+- [x] P43 Reminders
+- [ ] P44 Automatic cycle transitions
 - [ ] P42 Task API and logs
 - [ ] P43 Reminders
 - [ ] P44 Automatic cycle transitions
@@ -57,6 +58,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented push token registration and notification preferences in `UsersService` & `UsersController` (`PUT/GET /me/push-token`, `PUT/GET /me/notification-preferences`), plus `RemindersWorker` computing timezone-offset delays and building privacy-preserving generic notifications.
 - Implemented task execution endpoints in `TasksService` & `TasksController`: `GET /tasks`, `GET /tasks/:id`, and `POST /tasks/:id/log` supporting `start`, `pause`, `complete`, and `postpone` with `Idempotency-Key` header deduplication and append-only `task_logs`.
 - Added task materialization in `PlansService.approvePlan`: upon promoting a plan version to baseline, all `daily_task` plan items are materialized into `tasks` linked to the cycle, goal, plan item, and scheduled date, guarding idempotency against re-materialization.
 - Added Redis and BullMQ infrastructure with in-memory fallback for test and non-redis environments (`JobsService`), supporting queues `cycles` and `reminders` with delay, retry, worker registration, and `GET /admin/queues` status endpoint.
