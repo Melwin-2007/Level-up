@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 4
-- Current prompt: P33 (Complete)
-- Branch: main (tagged m3-done)
-- Next prompt: P40 (Infrastructure: Redis & BullMQ)
+- Current prompt: P40 (Complete)
+- Branch: feat/p40-infrastructure-redis-bullmq
+- Next prompt: P41 (Task Materialization)
 
 ## Checklist
 
@@ -44,9 +44,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P32 Pipeline integration
 - [x] P33 Mobile weekly and daily planner views
 
-### Milestone 4: Execution, Reminders, BullMQ (Upcoming)
+### Milestone 4: Execution, Reminders, BullMQ (In Progress)
 
-- [ ] P40 Infrastructure (Redis + BullMQ)
+- [x] P40 Infrastructure (Redis + BullMQ)
 - [ ] P41 Task materialization
 - [ ] P42 Task API and logs
 - [ ] P43 Reminders
@@ -55,6 +55,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Added Redis and BullMQ infrastructure with in-memory fallback for test and non-redis environments (`JobsService`), supporting queues `cycles` and `reminders` with delay, retry, worker registration, and `GET /admin/queues` status endpoint.
 - Embedded `MonthStrip` in mobile plan review (`apps/mobile/app/cycles/[id]/plan.tsx`) with daily scheduled workload gauge fills and active load markers.
 - Expanded weekly plan breakdown with scheduled daily tasks displaying dates, duration formatting, and titles while adhering to dark design tokens (zero raw hex literals outside `theme/tokens.ts`).
 - Integrated pure scheduler into `PlansService.generatePlan` pipeline: chunks large milestones (>120m) into sequential daily tasks, schedules tasks against member availability, and records explicit tradeoffs and conflicts when capacity is constrained.

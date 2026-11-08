@@ -16,6 +16,7 @@ import { SubmissionsModule } from './submissions/submissions.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { PlansModule } from './plans/plans.module.js';
+import { JobsModule } from './jobs/jobs.module.js';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { PlansModule } from './plans/plans.module.js';
     ReviewsModule,
     AiModule,
     PlansModule,
+    JobsModule,
   ],
   controllers: [HealthController],
   providers: [

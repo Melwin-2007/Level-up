@@ -47,6 +47,7 @@ Agents: if something is not covered here, take the simplest option, append a new
 38. Timezone and calendar calculation (`packages/scheduler/src/calendar.ts`): Pure functions for month duration with leap-year support, local day-of-week mapping in IANA timezones, dated exception overrides, bidirectional local slot to UTC conversion, and day length detection across DST transitions (23h spring forward, 25h fall back) with capacity clamping.
 39. Pipeline scheduler integration (`PlansService.generatePlan`): Chunks milestones into sequential daily tasks, schedules against member availability using `@mp/scheduler`, maps tradeoffs/conflicts to plan snapshot feasibility, and transactionally persists both milestone and daily task `plan_items`.
 40. Mobile Weekly & Daily Planner Views: Integrates `MonthStrip` daily scheduled load gauges and active load markers, and expands weekly cards to show scheduled daily tasks with date badges, duration formatting, and zero hex literals outside `theme/tokens.ts`.
+41. BullMQ & Redis infrastructure (`src/jobs/`): Redis connection uses `REDIS_URL` when provided. When `REDIS_URL` is omitted or in test environments, `JobsService` provides an in-memory queue provider supporting job addition, delayed jobs, and worker registration without requiring an external Redis daemon or Lua engine. Queues: `cycles` (for transition jobs) and `reminders` (for notification jobs). Non-production route `GET /admin/queues` reports real-time queue statuses behind `JwtAuthGuard`.
 
 ## Open questions for the owner (answer when convenient)
 

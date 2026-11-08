@@ -26,6 +26,7 @@ export const envSchema = z
     AI_PROVIDER: z.enum(['fake', 'gemini', 'openai']).default('fake'),
     AI_API_KEY: z.string().min(1).optional(),
     AI_MODEL: z.string().min(1).default('gemini-3.5-flash'),
+    REDIS_URL: z.string().min(1).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.AI_PROVIDER !== 'fake' && !data.AI_API_KEY && data.NODE_ENV !== 'test') {
