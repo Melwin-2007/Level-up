@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 4
-- Current prompt: P44 (Complete)
-- Branch: feat/p44-automatic-cycle-transitions
-- Next prompt: P45 (Mobile Today and Daily Execution View)
+- Current milestone: 4 (Complete)
+- Current prompt: P45 (Complete)
+- Branch: main
+- Next milestone: Milestone 5 (Social & Group Accountability)
 
 ## Checklist
 
@@ -44,21 +44,18 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P32 Pipeline integration
 - [x] P33 Mobile weekly and daily planner views
 
-### Milestone 4: Execution, Reminders, BullMQ (In Progress)
+### Milestone 4: Execution, Reminders, BullMQ (Complete)
 
 - [x] P40 Infrastructure (Redis + BullMQ)
 - [x] P41 Task materialization
 - [x] P42 Task API and logs
 - [x] P43 Reminders
 - [x] P44 Automatic cycle transitions
-- [ ] P45 Mobile Today and daily execution
-- [ ] P42 Task API and logs
-- [ ] P43 Reminders
-- [ ] P44 Automatic cycle transitions
-- [ ] P45 Mobile Today and daily execution
+- [x] P45 Mobile Today and daily execution
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented Mobile Today & Daily Execution View (`apps/mobile/app/(tabs)/index.tsx`, `TaskCard`, `TaskActionSheet`, `useTasks`): displays scheduled daily tasks, live stopwatch execution timer, completion and postpone logging with append-only sync, and `MonthStrip` day completion fill ratios under dark design tokens.
 - Implemented `CycleTransitionsWorker`: scans active cycles and auto-advances phases past deadlines (submission -> review -> planning -> execution -> completed) while locking submissions and ensuring baseline requirements are met without deadlock.
 - Implemented push token registration and notification preferences in `UsersService` & `UsersController` (`PUT/GET /me/push-token`, `PUT/GET /me/notification-preferences`), plus `RemindersWorker` computing timezone-offset delays and building privacy-preserving generic notifications.
 - Implemented task execution endpoints in `TasksService` & `TasksController`: `GET /tasks`, `GET /tasks/:id`, and `POST /tasks/:id/log` supporting `start`, `pause`, `complete`, and `postpone` with `Idempotency-Key` header deduplication and append-only `task_logs`.

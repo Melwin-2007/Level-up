@@ -4,7 +4,9 @@ import { colors, radius } from '@/theme/tokens';
 
 export type TaskStatus =
   | 'done'
+  | 'completed'
   | 'in_progress'
+  | 'paused'
   | 'pending'
   | 'postponed'
   | 'not_started'
@@ -27,6 +29,7 @@ export const StatusSquare: React.FC<StatusSquareProps> = ({ status, size = 14, s
 
   switch (status) {
     case 'done':
+    case 'completed':
     case 'locked':
       return (
         <View
@@ -44,6 +47,7 @@ export const StatusSquare: React.FC<StatusSquareProps> = ({ status, size = 14, s
       );
 
     case 'in_progress':
+    case 'paused':
     case 'draft':
       return (
         <View
