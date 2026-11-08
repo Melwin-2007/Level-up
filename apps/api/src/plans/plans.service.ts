@@ -520,6 +520,38 @@ export class PlansService {
         },
       });
 
+      // Materialize tasks from daily_task plan items into tasks table
+      const dailyTasks = updated.planItems.filter((item) => item.itemType === 'daily_task');
+      if (dailyTasks.length > 0) {
+        const existingTasks = await tx.task.findMany({
+          where: {
+            planItemId: { in: dailyTasks.map((i) => i.id) },
+          },
+          select: { planItemId: true },
+        });
+        const existingItemIds = new Set(existingTasks.map((t) => t.planItemId));
+
+        const tasksToCreate = dailyTasks
+          .filter((item) => !existingItemIds.has(item.id))
+          .map((item) => ({
+            cycleId,
+            userId,
+            goalId: item.goalId,
+            planItemId: item.id,
+            title: item.title,
+            description: item.description,
+            status: 'pending',
+            scheduledDate: item.plannedDate,
+            estimatedMinutes: item.estimatedMinutes,
+          }));
+
+        if (tasksToCreate.length > 0) {
+          await tx.task.createMany({
+            data: tasksToCreate,
+          });
+        }
+      }
+
       // 7. Check if all members with locked submissions have approved plans
       const lockedSubmissions = await tx.monthlySubmission.findMany({
         where: {

@@ -354,4 +354,28 @@ describe('Plan Approval API (e2e - P24)', () => {
     const cycle = await prisma.monthlyCycle.findUnique({ where: { id: cycleId } });
     expect(cycle?.status).toBe('execution');
   });
+
+  it('8. should materialize tasks from baseline daily_task plan items idempotently (P41)', async () => {
+    const ownerDailyTasks = await prisma.planItem.findMany({
+      where: {
+        planVersionId: ownerPlanVersionId,
+        itemType: 'daily_task',
+      },
+    });
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        cycleId,
+        userId: owner.userId,
+      },
+    });
+
+    expect(tasks.length).toBe(ownerDailyTasks.length);
+    for (const t of tasks) {
+      expect(t.status).toBe('pending');
+      expect(t.planItemId).toBeDefined();
+      expect(t.cycleId).toBe(cycleId);
+      expect(t.userId).toBe(owner.userId);
+    }
+  });
 });
