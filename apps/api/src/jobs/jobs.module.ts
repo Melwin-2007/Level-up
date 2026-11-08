@@ -5,6 +5,7 @@ import { redisProvider } from './redis.provider.js';
 import { JobsService } from './jobs.service.js';
 import { JobsController } from './jobs.controller.js';
 import { RemindersWorker } from './reminders.worker.js';
+import { CycleTransitionsWorker } from './cycle-transitions.worker.js';
 
 @Global()
 @Module({
@@ -14,11 +15,12 @@ import { RemindersWorker } from './reminders.worker.js';
     redisProvider,
     JobsService,
     RemindersWorker,
+    CycleTransitionsWorker,
     {
       provide: CLOCK,
       useClass: SystemClock,
     },
   ],
-  exports: [JobsService, RemindersWorker],
+  exports: [JobsService, RemindersWorker, CycleTransitionsWorker],
 })
 export class JobsModule {}

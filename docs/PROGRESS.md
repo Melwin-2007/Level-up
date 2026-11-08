@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 4
-- Current prompt: P43 (Complete)
-- Branch: feat/p43-reminders
-- Next prompt: P44 (Automatic Cycle Transitions)
+- Current prompt: P44 (Complete)
+- Branch: feat/p44-automatic-cycle-transitions
+- Next prompt: P45 (Mobile Today and Daily Execution View)
 
 ## Checklist
 
@@ -50,7 +50,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P41 Task materialization
 - [x] P42 Task API and logs
 - [x] P43 Reminders
-- [ ] P44 Automatic cycle transitions
+- [x] P44 Automatic cycle transitions
+- [ ] P45 Mobile Today and daily execution
 - [ ] P42 Task API and logs
 - [ ] P43 Reminders
 - [ ] P44 Automatic cycle transitions
@@ -58,6 +59,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented `CycleTransitionsWorker`: scans active cycles and auto-advances phases past deadlines (submission -> review -> planning -> execution -> completed) while locking submissions and ensuring baseline requirements are met without deadlock.
 - Implemented push token registration and notification preferences in `UsersService` & `UsersController` (`PUT/GET /me/push-token`, `PUT/GET /me/notification-preferences`), plus `RemindersWorker` computing timezone-offset delays and building privacy-preserving generic notifications.
 - Implemented task execution endpoints in `TasksService` & `TasksController`: `GET /tasks`, `GET /tasks/:id`, and `POST /tasks/:id/log` supporting `start`, `pause`, `complete`, and `postpone` with `Idempotency-Key` header deduplication and append-only `task_logs`.
 - Added task materialization in `PlansService.approvePlan`: upon promoting a plan version to baseline, all `daily_task` plan items are materialized into `tasks` linked to the cycle, goal, plan item, and scheduled date, guarding idempotency against re-materialization.
