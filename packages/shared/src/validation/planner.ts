@@ -53,11 +53,44 @@ export const schedulerTradeoffSchema = z.object({
 });
 export type SchedulerTradeoff = z.infer<typeof schedulerTradeoffSchema>;
 
+export const movedTaskDiffSchema = z.object({
+  taskId: z.string(),
+  title: z.string(),
+  fromDate: z.string().nullable().optional(),
+  toDate: z.string().nullable().optional(),
+});
+export type MovedTaskDiff = z.infer<typeof movedTaskDiffSchema>;
+
+export const addedTaskDiffSchema = z.object({
+  title: z.string(),
+  goalId: z.string().nullable().optional(),
+  scheduledDate: z.string().nullable().optional(),
+  estimatedMinutes: z.number().int(),
+});
+export type AddedTaskDiff = z.infer<typeof addedTaskDiffSchema>;
+
+export const removedTaskDiffSchema = z.object({
+  taskId: z.string(),
+  title: z.string(),
+  originalDate: z.string().nullable().optional(),
+  estimatedMinutes: z.number().int(),
+});
+export type RemovedTaskDiff = z.infer<typeof removedTaskDiffSchema>;
+
+export const planDiffSchema = z.object({
+  movedTasks: z.array(movedTaskDiffSchema).default([]),
+  addedTasks: z.array(addedTaskDiffSchema).default([]),
+  removedTasks: z.array(removedTaskDiffSchema).default([]),
+  summary: z.string(),
+});
+export type PlanDiff = z.infer<typeof planDiffSchema>;
+
 export const planDecompositionSchema = z.object({
   feasibility: feasibilityReportSchema,
   milestones: z.array(planMilestoneSchema).min(1),
   pacingSummary: z.string().min(1),
   tradeoffs: z.array(schedulerTradeoffSchema).default([]).optional(),
+  diff: planDiffSchema.optional(),
 });
 export type PlanDecomposition = z.infer<typeof planDecompositionSchema>;
 
@@ -74,3 +107,17 @@ export const approvePlanInputSchema = z.object({
   planVersionId: z.string().uuid(),
 });
 export type ApprovePlanInput = z.infer<typeof approvePlanInputSchema>;
+
+export const reoptimizePlanSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(10, 'Reason must be at least 10 characters')
+    .max(500, 'Reason cannot exceed 500 characters'),
+  adjustmentsNote: z
+    .string()
+    .trim()
+    .max(1000, 'Adjustments note cannot exceed 1000 characters')
+    .optional(),
+});
+export type ReoptimizePlanInput = z.infer<typeof reoptimizePlanSchema>;

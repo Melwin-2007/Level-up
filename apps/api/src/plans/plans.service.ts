@@ -22,13 +22,18 @@ import {
   schedule,
   buildMonthAvailability,
   getDaysInMonth,
+  calculateRemainingWork,
   type TaskCandidate,
+  type TaskExecutionItem,
+  type TaskExecutionStatus,
 } from '@mp/scheduler';
 import {
   planDecompositionSchema,
   type GeneratePlanInput,
   type ApprovePlanInput,
+  type ReoptimizePlanInput,
   type PlanDecomposition,
+  type PlanDiff,
 } from '@mp/shared';
 
 export interface PlanItemResponse {
@@ -599,6 +604,361 @@ export class PlansService {
       approvedAt: approvedVersion.approvedAt?.toISOString() ?? null,
       createdAt: approvedVersion.createdAt.toISOString(),
       items: approvedVersion.planItems.map((item) => ({
+        id: item.id,
+        planVersionId: item.planVersionId,
+        goalId: item.goalId,
+        itemType: item.itemType,
+        title: item.title,
+        description: item.description,
+        plannedDate: item.plannedDate ? item.plannedDate.toISOString().slice(0, 10) : null,
+        weekNumber: item.weekNumber,
+        estimatedMinutes: item.estimatedMinutes,
+        orderIndex: item.orderIndex,
+        createdAt: item.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async reoptimizePlan(
+    cycleId: string,
+    userId: string,
+    input: ReoptimizePlanInput
+  ): Promise<PlanVersionResponse> {
+    const cycle = await this.prisma.monthlyCycle.findUnique({
+      where: { id: cycleId },
+    });
+
+    if (!cycle) {
+      throw new NotFoundException({
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Cycle not found',
+        },
+      });
+    }
+
+    // Must be in execution phase
+    this.cycleStateService.assertAllows(cycle, 'plan.reoptimize');
+
+    // Verify user is a member of the group
+    const membership = await this.prisma.groupMember.findUnique({
+      where: {
+        groupId_userId: {
+          groupId: cycle.groupId,
+          userId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new HttpException(
+        {
+          error: {
+            code: 'FORBIDDEN',
+            message: "You are not a member of this cycle's group",
+          },
+        },
+        HttpStatus.FORBIDDEN
+      );
+    }
+
+    // Fetch member's latest approved plan
+    const approvedPlan = await this.prisma.planVersion.findFirst({
+      where: {
+        cycleId,
+        userId,
+        approvalStatus: 'approved',
+      },
+      orderBy: {
+        versionNumber: 'desc',
+      },
+      include: {
+        planItems: {
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+    });
+
+    if (!approvedPlan) {
+      throw new NotFoundException({
+        error: {
+          code: 'NO_APPROVED_PLAN',
+          message: 'No approved plan exists to reoptimize for this cycle',
+        },
+      });
+    }
+
+    const nowIso = this.clock.now().toISOString();
+    const today = nowIso.slice(0, 10);
+    const daysInCycleMonth = getDaysInMonth(cycle.year, cycle.month);
+    const cycleStartDate = `${cycle.year}-${String(cycle.month).padStart(2, '0')}-01`;
+    const cycleEndDate = `${cycle.year}-${String(cycle.month).padStart(2, '0')}-${String(daysInCycleMonth).padStart(2, '0')}`;
+
+    // Fetch existing tasks
+    const currentTasks = await this.prisma.task.findMany({
+      where: { cycleId, userId },
+      orderBy: { scheduledDate: 'asc' },
+    });
+
+    // Fetch availability
+    const submission = await this.prisma.monthlySubmission.findUnique({
+      where: {
+        cycleId_userId: { cycleId, userId },
+      },
+    });
+    const profile = await this.prisma.profile.findUnique({
+      where: { id: userId },
+    });
+    const userTimezone = profile?.timezone ?? 'UTC';
+
+    const availabilityRaw = (submission?.availability as Record<string, unknown> | null) ?? null;
+    const weeklyHours = availabilityRaw?.weeklyHours as Partial<Record<string, number>> | undefined;
+    const exceptions = availabilityRaw?.exceptions as
+      Array<{ date: string; hours: number; reason?: string }> | undefined;
+
+    const monthAvailability = buildMonthAvailability({
+      year: cycle.year,
+      month: cycle.month,
+      timezone: userTimezone,
+      weeklyHours,
+      exceptions,
+    });
+
+    const taskExecutionItems: TaskExecutionItem[] = currentTasks.map((t) => ({
+      id: t.id,
+      goalId: t.goalId,
+      planItemId: t.planItemId,
+      title: t.title,
+      description: t.description,
+      status: t.status as TaskExecutionStatus,
+      scheduledDate: t.scheduledDate ? t.scheduledDate.toISOString().slice(0, 10) : null,
+      estimatedMinutes: t.estimatedMinutes,
+      actualMinutes: t.actualMinutes,
+      completedAt: t.completedAt ? t.completedAt.toISOString() : null,
+    }));
+
+    // If no materialized tasks exist, derive task items from approved plan daily_tasks
+    if (taskExecutionItems.length === 0) {
+      const dailyItems = approvedPlan.planItems.filter((i) => i.itemType === 'daily_task');
+      for (const item of dailyItems) {
+        taskExecutionItems.push({
+          id: item.id,
+          goalId: item.goalId,
+          planItemId: item.id,
+          title: item.title,
+          status: 'pending',
+          scheduledDate: item.plannedDate ? item.plannedDate.toISOString().slice(0, 10) : null,
+          estimatedMinutes: item.estimatedMinutes,
+        });
+      }
+    }
+
+    const remainingWork = calculateRemainingWork({
+      today,
+      cycleStartDate,
+      cycleEndDate,
+      availability: monthAvailability,
+      currentTasks: taskExecutionItems,
+    });
+
+    // Schedule reschedule candidates into remaining availability
+    const remainingAvailability = monthAvailability.filter(
+      (d) => d.date >= today && d.date <= cycleEndDate
+    );
+
+    const schedulerOutput = schedule({
+      tasks: remainingWork.rescheduleCandidates,
+      availability: remainingAvailability,
+    });
+
+    // Compute plan diff comparing uncompleted tasks against scheduled tasks
+    const scheduledTaskMap = new Map<string, (typeof schedulerOutput.scheduled)[number]>();
+    for (const st of schedulerOutput.scheduled) {
+      scheduledTaskMap.set(st.taskId, st);
+    }
+
+    const movedTasks: Array<{
+      taskId: string;
+      title: string;
+      fromDate?: string | null;
+      toDate?: string | null;
+    }> = [];
+    const removedTasks: Array<{
+      taskId: string;
+      title: string;
+      originalDate?: string | null;
+      estimatedMinutes: number;
+    }> = [];
+
+    for (const t of taskExecutionItems) {
+      if (t.status === 'completed' || t.status === 'cancelled') {
+        continue;
+      }
+      const st = scheduledTaskMap.get(t.id);
+      const originalDate = t.scheduledDate ?? null;
+      if (st) {
+        if (st.date !== originalDate) {
+          movedTasks.push({
+            taskId: t.id,
+            title: t.title,
+            fromDate: originalDate,
+            toDate: st.date,
+          });
+        }
+      } else {
+        removedTasks.push({
+          taskId: t.id,
+          title: t.title,
+          originalDate,
+          estimatedMinutes: t.estimatedMinutes,
+        });
+      }
+    }
+
+    const diff: PlanDiff = {
+      movedTasks,
+      addedTasks: [],
+      removedTasks,
+      summary: `${movedTasks.length} tasks rescheduled, ${removedTasks.length} tasks unscheduled across remaining days.`,
+    };
+
+    const oldSnapshot = approvedPlan.planSnapshot as unknown as PlanDecomposition;
+    const decomposition: PlanDecomposition = {
+      feasibility: {
+        verdict: remainingWork.isFeasible
+          ? remainingWork.capacityDeficitMinutes === 0
+            ? 'feasible'
+            : 'tight'
+          : 'infeasible',
+        totalEstimatedHours: Math.round((remainingWork.totalRemainingMinutes / 60) * 10) / 10,
+        totalAvailableHours: Math.round((remainingWork.remainingCapacityMinutes / 60) * 10) / 10,
+        capacityRatio:
+          remainingWork.remainingCapacityMinutes > 0
+            ? Math.round(
+                (remainingWork.totalRemainingMinutes / remainingWork.remainingCapacityMinutes) * 100
+              ) / 100
+            : 1,
+        goalVerdicts: remainingWork.goalSummaries.map((g) => ({
+          goalId: g.goalId,
+          status: g.slippedTasks > 0 ? 'at_risk' : 'achievable',
+          risks: g.slippedTasks > 0 ? [`${g.slippedTasks} tasks overdue`] : [],
+          recommendations: g.slippedTasks > 0 ? ['Rescheduled to earlier available dates'] : [],
+        })),
+        conflicts:
+          remainingWork.capacityDeficitMinutes > 0
+            ? [
+                {
+                  type: 'capacity',
+                  description: `Capacity deficit of ${remainingWork.capacityDeficitMinutes} minutes over remaining cycle duration`,
+                  goalIds: remainingWork.goalSummaries.map((g) => g.goalId),
+                },
+              ]
+            : [],
+        rationale: `Reoptimization reason: "${input.reason}". ${diff.summary}`,
+      },
+      milestones: oldSnapshot.milestones ?? [],
+      pacingSummary: `Reoptimized from ${today}: ${remainingWork.slippedTasks.length} slipped tasks recovered, ${schedulerOutput.scheduled.length} tasks scheduled over remaining period.`,
+      tradeoffs: schedulerOutput.tradeoffs.map((t) => ({
+        taskId: t.taskId,
+        goalId: t.goalId,
+        explanation: t.explanation,
+      })),
+      diff,
+    };
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const highestVersion = await tx.planVersion.findFirst({
+        where: { cycleId, userId },
+        orderBy: { versionNumber: 'desc' },
+        select: { versionNumber: true },
+      });
+
+      const nextVersionNumber = (highestVersion?.versionNumber ?? approvedPlan.versionNumber) + 1;
+
+      const newPlanVersion = await tx.planVersion.create({
+        data: {
+          cycleId,
+          userId,
+          versionNumber: nextVersionNumber,
+          versionType: 'reoptimized',
+          approvalStatus: 'pending',
+          isBaseline: false,
+          planSnapshot: decomposition as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      const candidateMetaMap = new Map<string, TaskExecutionItem>();
+      for (const t of taskExecutionItems) {
+        candidateMetaMap.set(t.id, t);
+      }
+
+      await Promise.all(
+        decomposition.milestones.map((m, idx) =>
+          tx.planItem.create({
+            data: {
+              planVersionId: newPlanVersion.id,
+              goalId: m.goalId ?? null,
+              itemType: 'milestone',
+              title: m.title,
+              description: m.description ?? null,
+              weekNumber: m.targetWeek,
+              estimatedMinutes: m.estimatedMinutes,
+              orderIndex: idx,
+            },
+          })
+        )
+      );
+
+      let orderIndex = decomposition.milestones.length;
+      await Promise.all(
+        schedulerOutput.scheduled.map((st) => {
+          const meta = candidateMetaMap.get(st.taskId);
+          const dayNum = Number(st.date.split('-')[2]);
+          const weekNumber = Math.min(5, Math.ceil(dayNum / 7));
+
+          const startH = String(Math.floor(st.startMinute / 60)).padStart(2, '0');
+          const startM = String(st.startMinute % 60).padStart(2, '0');
+          const endH = String(Math.floor(st.endMinute / 60)).padStart(2, '0');
+          const endM = String(st.endMinute % 60).padStart(2, '0');
+
+          return tx.planItem.create({
+            data: {
+              planVersionId: newPlanVersion.id,
+              goalId: meta?.goalId && meta.goalId !== 'unassigned' ? meta.goalId : null,
+              itemType: 'daily_task',
+              title: meta?.title ?? 'Daily Task',
+              description: `Scheduled: ${startH}:${startM} - ${endH}:${endM}`,
+              plannedDate: new Date(`${st.date}T00:00:00.000Z`),
+              weekNumber,
+              estimatedMinutes: st.durationMinutes,
+              orderIndex: orderIndex++,
+            },
+          });
+        })
+      );
+
+      return tx.planVersion.findUniqueOrThrow({
+        where: { id: newPlanVersion.id },
+        include: {
+          planItems: {
+            orderBy: { orderIndex: 'asc' },
+          },
+        },
+      });
+    });
+
+    return {
+      id: result.id,
+      cycleId: result.cycleId,
+      userId: result.userId,
+      versionNumber: result.versionNumber,
+      versionType: result.versionType,
+      approvalStatus: result.approvalStatus,
+      isBaseline: result.isBaseline,
+      planSnapshot: result.planSnapshot as unknown as PlanDecomposition,
+      approvedAt: result.approvedAt?.toISOString() ?? null,
+      createdAt: result.createdAt.toISOString(),
+      items: result.planItems.map((item) => ({
         id: item.id,
         planVersionId: item.planVersionId,
         goalId: item.goalId,

@@ -13,6 +13,8 @@ import {
   type GeneratePlanInput,
   approvePlanInputSchema,
   type ApprovePlanInput,
+  reoptimizePlanSchema,
+  type ReoptimizePlanInput,
 } from '@mp/shared';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
@@ -39,6 +41,16 @@ export class PlansController {
     @Body(new ZodValidationPipe(approvePlanInputSchema)) body: ApprovePlanInput
   ): Promise<{ planVersion: PlanVersionResponse }> {
     const planVersion = await this.plansService.approvePlan(cycleId, user.userId, body);
+    return { planVersion };
+  }
+
+  @Post('reoptimize')
+  async reoptimizePlan(
+    @CurrentUser() user: { userId: string },
+    @Param('id', new ParseUUIDPipe()) cycleId: string,
+    @Body(new ZodValidationPipe(reoptimizePlanSchema)) body: ReoptimizePlanInput
+  ): Promise<{ planVersion: PlanVersionResponse }> {
+    const planVersion = await this.plansService.reoptimizePlan(cycleId, user.userId, body);
     return { planVersion };
   }
 

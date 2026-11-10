@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 5
-- Current prompt: P50 (Complete)
-- Branch: feat/p50-remaining-work-calculator
-- Next prompt: P51 (`POST /cycles/:id/reoptimize`)
+- Current prompt: P51 (Complete)
+- Branch: feat/p51-reoptimize-endpoint
+- Next prompt: P52 (Approval and task sync)
 
 ## Checklist
 
@@ -56,14 +56,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ### Milestone 5: Reoptimization and Version History (In Progress)
 
 - [x] P50 Remaining-work calculator
-- [ ] P51 POST /cycles/:id/reoptimize
+- [x] P51 POST /cycles/:id/reoptimize
 - [ ] P52 Approval and task sync
 - [ ] P53 Mobile version history
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented `POST /cycles/:id/reoptimize` in `PlansService` & `PlansController`: computes remaining work and schedules candidates across remaining cycle days, generates immutable `PlanDiff` (moved/removed tasks), and persists new pending `plan_versions` record without mutating baseline plan or active tasks.
 - Implemented pure remaining-work calculator in `@mp/scheduler` (`calculateRemainingWork`): isolates completed tasks (immutable actuals), identifies slipped tasks with days-overdue metrics, aggregates future pending tasks, computes remaining capacity from today onwards, and derives feasibility balance and reschedule candidates without mutating input data.
-
 - Implemented Mobile Today & Daily Execution View (`apps/mobile/app/(tabs)/index.tsx`, `TaskCard`, `TaskActionSheet`, `useTasks`): displays scheduled daily tasks, live stopwatch execution timer, completion and postpone logging with append-only sync, and `MonthStrip` day completion fill ratios under dark design tokens.
 - Implemented `CycleTransitionsWorker`: scans active cycles and auto-advances phases past deadlines (submission -> review -> planning -> execution -> completed) while locking submissions and ensuring baseline requirements are met without deadlock.
 - Implemented push token registration and notification preferences in `UsersService` & `UsersController` (`PUT/GET /me/push-token`, `PUT/GET /me/notification-preferences`), plus `RemindersWorker` computing timezone-offset delays and building privacy-preserving generic notifications.
