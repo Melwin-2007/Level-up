@@ -414,6 +414,69 @@ export class PlansService {
     };
   }
 
+  async getPlanVersions(cycleId: string, userId: string): Promise<PlanVersionResponse[]> {
+    const cycle = await this.prisma.monthlyCycle.findUnique({
+      where: { id: cycleId },
+    });
+
+    if (!cycle) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    const membership = await this.prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: cycle.groupId, userId } },
+    });
+
+    if (!membership) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    const planVersions = await this.prisma.planVersion.findMany({
+      where: {
+        cycleId,
+        userId,
+      },
+      orderBy: {
+        versionNumber: 'desc',
+      },
+      include: {
+        planItems: {
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+    });
+
+    return planVersions.map((planVersion) => ({
+      id: planVersion.id,
+      cycleId: planVersion.cycleId,
+      userId: planVersion.userId,
+      versionNumber: planVersion.versionNumber,
+      versionType: planVersion.versionType,
+      approvalStatus: planVersion.approvalStatus,
+      isBaseline: planVersion.isBaseline,
+      planSnapshot: planVersion.planSnapshot as unknown as PlanDecomposition,
+      approvedAt: planVersion.approvedAt?.toISOString() ?? null,
+      createdAt: planVersion.createdAt.toISOString(),
+      items: planVersion.planItems.map((item) => ({
+        id: item.id,
+        planVersionId: item.planVersionId,
+        goalId: item.goalId,
+        itemType: item.itemType,
+        title: item.title,
+        description: item.description,
+        plannedDate: item.plannedDate ? item.plannedDate.toISOString().slice(0, 10) : null,
+        weekNumber: item.weekNumber,
+        estimatedMinutes: item.estimatedMinutes,
+        orderIndex: item.orderIndex,
+        createdAt: item.createdAt.toISOString(),
+      })),
+    }));
+  }
+
   async approvePlan(
     cycleId: string,
     userId: string,

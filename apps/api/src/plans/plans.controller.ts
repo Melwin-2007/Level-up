@@ -70,4 +70,13 @@ export class PlansController {
     }
     return { planVersion };
   }
+
+  @Get('plan-versions')
+  async getPlanVersions(
+    @CurrentUser() user: { userId: string },
+    @Param('id', new ParseUUIDPipe()) cycleId: string
+  ): Promise<{ planVersions: PlanVersionResponse[] }> {
+    const planVersions = await this.plansService.getPlanVersions(cycleId, user.userId);
+    return { planVersions };
+  }
 }

@@ -28,7 +28,14 @@ import {
 } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useCycle } from '@/hooks/use-cycles';
-import { usePlan, useGeneratePlanMutation, useApprovePlanMutation } from '@/hooks/use-plans';
+import {
+  usePlan,
+  usePlanVersions,
+  useGeneratePlanMutation,
+  useApprovePlanMutation,
+  useReoptimizePlanMutation,
+} from '@/hooks/use-plans';
+import { PlanVersionSheet, ReoptimizeSheet, PlanDiffView } from '@/components/plans';
 import { formatMonthName } from '@/services/dates';
 import { mapApiError } from '@/services/api';
 
@@ -82,6 +89,8 @@ export default function PlanReviewScreen(): React.ReactNode {
 
   const generateMutation = useGeneratePlanMutation(id);
   const approveMutation = useApprovePlanMutation(id);
+  const reoptimizeMutation = useReoptimizePlanMutation(id);
+  const { data: planVersions = [] } = usePlanVersions(id);
 
   // UI state
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({
@@ -93,6 +102,8 @@ export default function PlanReviewScreen(): React.ReactNode {
   });
   const [assistantSheetOpen, setAssistantSheetOpen] = useState(false);
   const [confirmApproveSheetOpen, setConfirmApproveSheetOpen] = useState(false);
+  const [versionSheetOpen, setVersionSheetOpen] = useState(false);
+  const [reoptimizeSheetOpen, setReoptimizeSheetOpen] = useState(false);
   const [adjustmentsNote, setAdjustmentsNote] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -286,18 +297,29 @@ export default function PlanReviewScreen(): React.ReactNode {
         </View>
       </View>
 
-      {/* "Proposed by AI" banner on unapproved plan */}
+      {/* "Proposed by AI" or "Reoptimization Proposed" banner */}
       {!isBaseline && plan ? (
         <View style={styles.aiTagBanner} testID="proposed-by-ai-badge">
           <Row style={styles.aiTagRow}>
             <Sparkles size={14} color={colors.flare} />
             <Text variant="small" color="flare" style={styles.aiTagText}>
-              Proposed by AI (Version {plan.versionNumber})
+              {plan.versionType === 'reoptimized'
+                ? `Reoptimization Proposed (v${plan.versionNumber})`
+                : `Proposed by AI (Version ${plan.versionNumber})`}
             </Text>
           </Row>
           <Text variant="micro" color="ash" style={styles.aiTagSubtext}>
-            Review pacing and weekly breakdown before locking your baseline.
+            {plan.versionType === 'reoptimized'
+              ? 'Review proposed schedule adjustments and plain diff before approving.'
+              : 'Review pacing and weekly breakdown before locking your baseline.'}
           </Text>
+        </View>
+      ) : null}
+
+      {/* Plan Diff View for reoptimized plan */}
+      {plan?.planSnapshot?.diff ? (
+        <View style={styles.diffContainer}>
+          <PlanDiffView diff={plan.planSnapshot.diff} />
         </View>
       ) : null}
 
@@ -628,7 +650,13 @@ export default function PlanReviewScreen(): React.ReactNode {
             {!isBaseline ? (
               <View style={styles.footerButtons}>
                 <Button
-                  label={approveMutation.isPending ? 'Locking Baseline...' : 'Approve Plan'}
+                  label={
+                    approveMutation.isPending
+                      ? 'Approving...'
+                      : plan.versionType === 'reoptimized'
+                        ? 'Approve Reoptimized Plan'
+                        : 'Approve Plan'
+                  }
                   variant="primary"
                   onPress={() => setConfirmApproveSheetOpen(true)}
                   disabled={approveMutation.isPending || generateMutation.isPending}
@@ -645,13 +673,32 @@ export default function PlanReviewScreen(): React.ReactNode {
                 <Row style={styles.approvedRow}>
                   <CheckCircle2 size={18} color={colors.ink} />
                   <Text variant="body" color="ink">
-                    Baseline Plan Approved & Locked
+                    {plan.isBaseline
+                      ? 'Baseline Plan Approved & Locked'
+                      : `Version ${plan.versionNumber} Approved`}
                   </Text>
                 </Row>
                 <Text variant="small" color="ash" style={styles.approvedSubtext}>
-                  This plan is your official baseline for the month. Daily tracking starts when
-                  execution begins.
+                  {plan.isBaseline
+                    ? 'This plan is your official baseline for the month. Daily tracking starts when execution begins.'
+                    : `Active plan is Version ${plan.versionNumber}.`}
                 </Text>
+                <View style={styles.approvedActions}>
+                  {planVersions.length > 1 && (
+                    <Button
+                      label={`Version History (${planVersions.length})`}
+                      variant="secondary"
+                      onPress={() => setVersionSheetOpen(true)}
+                    />
+                  )}
+                  {cycle?.status === 'execution' && (
+                    <Button
+                      label="Reoptimize Schedule"
+                      variant="secondary"
+                      onPress={() => setReoptimizeSheetOpen(true)}
+                    />
+                  )}
+                </View>
               </View>
             )}
           </View>
@@ -751,19 +798,24 @@ export default function PlanReviewScreen(): React.ReactNode {
         </ScrollView>
       </Sheet>
 
-      {/* Confirmation Sheet for Approving Baseline Plan */}
+      {/* Confirmation Sheet for Approving Plan */}
       <Sheet
         visible={confirmApproveSheetOpen}
         onClose={() => setConfirmApproveSheetOpen(false)}
-        title="Approve Baseline Plan"
+        title={
+          plan?.versionType === 'reoptimized' ? 'Approve Reoptimized Plan' : 'Approve Baseline Plan'
+        }
       >
         <View style={styles.confirmContent}>
           <Text variant="body" color="ink" style={styles.confirmText}>
-            Approving this plan sets it as your official, immutable baseline for the month.
+            {plan?.versionType === 'reoptimized'
+              ? 'Approving this reoptimized plan will reschedule your future tasks and mark dropped tasks cancelled. Completed tasks and past logs remain unchanged.'
+              : 'Approving this plan sets it as your official, immutable baseline for the month.'}
           </Text>
           <Text variant="small" color="ash" style={styles.confirmSubtext}>
-            Once approved, the plan snapshot cannot be edited or deleted. When all members have
-            approved, the cycle will automatically advance to execution.
+            {plan?.versionType === 'reoptimized'
+              ? 'Your original baseline remains preserved in your plan version history.'
+              : 'Once approved, the plan snapshot cannot be edited or deleted. When all members have approved, the cycle will automatically advance to execution.'}
           </Text>
 
           <View style={styles.confirmActions}>
@@ -781,6 +833,29 @@ export default function PlanReviewScreen(): React.ReactNode {
           </View>
         </View>
       </Sheet>
+
+      {/* Plan Version History Sheet */}
+      <PlanVersionSheet
+        visible={versionSheetOpen}
+        onClose={() => setVersionSheetOpen(false)}
+        versions={planVersions}
+        onApproveVersion={async (versionId) => {
+          await approveMutation.mutateAsync({ planVersionId: versionId });
+          void refetchPlan();
+        }}
+        approving={approveMutation.isPending}
+      />
+
+      {/* Reoptimize Request Sheet */}
+      <ReoptimizeSheet
+        visible={reoptimizeSheetOpen}
+        onClose={() => setReoptimizeSheetOpen(false)}
+        loading={reoptimizeMutation.isPending}
+        onSubmit={async (reason) => {
+          await reoptimizeMutation.mutateAsync({ reason });
+          void refetchPlan();
+        }}
+      />
     </Screen>
   );
 }
@@ -1061,6 +1136,13 @@ const styles = StyleSheet.create({
   },
   approvedSubtext: {
     lineHeight: 18,
+  },
+  approvedActions: {
+    marginTop: spacing.unit * 3,
+    gap: spacing.unit * 2,
+  },
+  diffContainer: {
+    marginBottom: spacing.unit * 4,
   },
   sheetScroll: {
     maxHeight: 460,

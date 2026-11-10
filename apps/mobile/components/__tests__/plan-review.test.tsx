@@ -118,6 +118,17 @@ describe('PlanReviewScreen (Mobile - P25)', () => {
       mutateAsync: mockApproveMutateAsync,
       isPending: false,
     } as unknown as ReturnType<typeof usePlansHook.useApprovePlanMutation>);
+
+    jest.spyOn(usePlansHook, 'usePlanVersions').mockReturnValue({
+      data: [mockPlan],
+      isLoading: false,
+      refetch: jest.fn(),
+    } as unknown as ReturnType<typeof usePlansHook.usePlanVersions>);
+
+    jest.spyOn(usePlansHook, 'useReoptimizePlanMutation').mockReturnValue({
+      mutateAsync: jest.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof usePlansHook.useReoptimizePlanMutation>);
   });
 
   it('renders feasibility verdict and weekly milestones', () => {

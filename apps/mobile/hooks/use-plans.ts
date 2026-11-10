@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PlanVersionResponse, GeneratePlanInput, ApprovePlanInput } from '@mp/shared';
+import type {
+  PlanVersionResponse,
+  GeneratePlanInput,
+  ApprovePlanInput,
+  ReoptimizePlanInput,
+} from '@mp/shared';
 import { api, ApiError } from '@/services/api';
 
 export function usePlan(cycleId: string | undefined) {
@@ -13,6 +18,27 @@ export function usePlan(cycleId: string | undefined) {
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           return null;
+        }
+        throw err;
+      }
+    },
+    enabled: Boolean(cycleId),
+  });
+}
+
+export function usePlanVersions(cycleId: string | undefined) {
+  return useQuery({
+    queryKey: ['plan-versions', cycleId],
+    queryFn: async (): Promise<PlanVersionResponse[]> => {
+      if (!cycleId) return [];
+      try {
+        const res = await api.get<{ planVersions: PlanVersionResponse[] }>(
+          `/cycles/${cycleId}/plan-versions`
+        );
+        return res.planVersions;
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          return [];
         }
         throw err;
       }
@@ -36,6 +62,7 @@ export function useGeneratePlanMutation(cycleId: string | undefined) {
     onSuccess: (data) => {
       queryClient.setQueryData(['plan', cycleId], data);
       void queryClient.invalidateQueries({ queryKey: ['plan', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['plan-versions', cycleId] });
       void queryClient.invalidateQueries({ queryKey: ['cycle', cycleId] });
     },
   });
@@ -56,8 +83,32 @@ export function useApprovePlanMutation(cycleId: string | undefined) {
     onSuccess: (data) => {
       queryClient.setQueryData(['plan', cycleId], data);
       void queryClient.invalidateQueries({ queryKey: ['plan', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['plan-versions', cycleId] });
       void queryClient.invalidateQueries({ queryKey: ['cycle', cycleId] });
       void queryClient.invalidateQueries({ queryKey: ['cycles'] });
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+}
+
+export function useReoptimizePlanMutation(cycleId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: ReoptimizePlanInput): Promise<PlanVersionResponse> => {
+      if (!cycleId) throw new Error('cycleId is required');
+      const res = await api.post<{ planVersion: PlanVersionResponse }>(
+        `/cycles/${cycleId}/reoptimize`,
+        input
+      );
+      return res.planVersion;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['plan', cycleId], data);
+      void queryClient.invalidateQueries({ queryKey: ['plan', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['plan-versions', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['cycle', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 }
