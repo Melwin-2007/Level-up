@@ -114,3 +114,79 @@ export interface MonthAvailabilityInput {
   /** Default slot start minute (defaults to 540 = 09:00) */
   defaultStartMinute?: number;
 }
+
+export type TaskExecutionStatus =
+  'pending' | 'in_progress' | 'paused' | 'completed' | 'postponed' | 'cancelled';
+
+export interface TaskExecutionItem {
+  id: string;
+  goalId?: string | null;
+  planItemId?: string | null;
+  title: string;
+  description?: string | null;
+  status: TaskExecutionStatus;
+  scheduledDate?: string | null; // ISO YYYY-MM-DD
+  estimatedMinutes: number;
+  actualMinutes?: number;
+  completedAt?: string | Date | null;
+  priority?: number; // 1-5
+  deadline?: string | null; // ISO YYYY-MM-DD
+  dependencies?: string[];
+}
+
+export interface PlanItemSnapshot {
+  id: string;
+  goalId?: string | null;
+  itemType: string;
+  title: string;
+  description?: string | null;
+  plannedDate?: string | null;
+  weekNumber?: number | null;
+  estimatedMinutes: number;
+  orderIndex?: number;
+}
+
+export interface SlippedTask {
+  task: TaskExecutionItem;
+  daysOverdue: number;
+  originalScheduledDate: string;
+}
+
+export interface GoalWorkSummary {
+  goalId: string;
+  totalTasks: number;
+  completedTasks: number;
+  slippedTasks: number;
+  futurePendingTasks: number;
+  completedMinutes: number;
+  remainingMinutes: number;
+}
+
+export interface RemainingWorkInput {
+  today: string; // ISO YYYY-MM-DD
+  cycleStartDate: string; // ISO YYYY-MM-DD
+  cycleEndDate: string; // ISO YYYY-MM-DD
+  availability: DayAvailability[];
+  currentTasks: TaskExecutionItem[];
+  baselinePlanItems?: PlanItemSnapshot[];
+  currentPlanItems?: PlanItemSnapshot[];
+  maxDailyMinutes?: number;
+}
+
+export interface RemainingWorkOutput {
+  today: string;
+  cycleStartDate: string;
+  cycleEndDate: string;
+  completedTasks: TaskExecutionItem[];
+  completedMinutes: number;
+  slippedTasks: SlippedTask[];
+  slippedMinutes: number;
+  futurePendingTasks: TaskExecutionItem[];
+  futurePendingMinutes: number;
+  totalRemainingMinutes: number;
+  remainingCapacityMinutes: number;
+  capacityDeficitMinutes: number;
+  isFeasible: boolean;
+  rescheduleCandidates: TaskCandidate[];
+  goalSummaries: GoalWorkSummary[];
+}

@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 4 (Complete)
-- Current prompt: P45 (Complete)
-- Branch: main
-- Next milestone: Milestone 5 (Social & Group Accountability)
+- Current milestone: 5
+- Current prompt: P50 (Complete)
+- Branch: feat/p50-remaining-work-calculator
+- Next prompt: P51 (`POST /cycles/:id/reoptimize`)
 
 ## Checklist
 
@@ -53,7 +53,16 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P44 Automatic cycle transitions
 - [x] P45 Mobile Today and daily execution
 
+### Milestone 5: Reoptimization and Version History (In Progress)
+
+- [x] P50 Remaining-work calculator
+- [ ] P51 POST /cycles/:id/reoptimize
+- [ ] P52 Approval and task sync
+- [ ] P53 Mobile version history
+
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented pure remaining-work calculator in `@mp/scheduler` (`calculateRemainingWork`): isolates completed tasks (immutable actuals), identifies slipped tasks with days-overdue metrics, aggregates future pending tasks, computes remaining capacity from today onwards, and derives feasibility balance and reschedule candidates without mutating input data.
 
 - Implemented Mobile Today & Daily Execution View (`apps/mobile/app/(tabs)/index.tsx`, `TaskCard`, `TaskActionSheet`, `useTasks`): displays scheduled daily tasks, live stopwatch execution timer, completion and postpone logging with append-only sync, and `MonthStrip` day completion fill ratios under dark design tokens.
 - Implemented `CycleTransitionsWorker`: scans active cycles and auto-advances phases past deadlines (submission -> review -> planning -> execution -> completed) while locking submissions and ensuring baseline requirements are met without deadlock.
@@ -121,10 +130,8 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Built Group review screen (`apps/mobile/app/cycles/[id]/review.tsx`) grouping goals by member with accordion goal details, inline comment rows with relative timestamps, add comment Sheet, finish review confirmation, and 15s conditional polling while active.
 - Added Jest test suites for submission mapping, draft store, and review comment list (56/56 tests passing across 10 suites in mobile).
 
-- Configured EAS build in `apps/mobile/eas.json` with `preview` (APK, internal) and `production` profiles.
-- Wrote `docs/ACCEPTANCE-M1.md` with full 25-step SPEC 7.4 scenario checklist.
-- Visual & contrast audit: removed all restricted text colors (`flare` small text, `signal` text, `oxblood` text) to ensure strict WCAG AA contrast compliance with `docs/DESIGN.md`.
-- Privacy pass: verified that member availability, constraints, and drafts are never leaked across users via test suites and API contracts.
+- Configured EAS build in `apps/mobile/eas.json` (`preview`, `production`); wrote `docs/ACCEPTANCE-M1.md` with full 25-step SPEC scenario checklist.
+- Visual and contrast audit: WCAG AA contrast compliance verified; member privacy isolation verified across all endpoints and tests.
 
 ## Known issues & Prod To-dos
 
