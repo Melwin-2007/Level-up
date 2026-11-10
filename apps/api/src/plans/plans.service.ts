@@ -480,7 +480,7 @@ export class PlansService {
       });
     }
 
-    // 6. Atomically approve and promote to baseline
+    // 6. Atomically approve and promote to baseline (or sync future tasks if reoptimized)
     const now = this.clock.now();
     const approvedVersion = await this.prisma.$transaction(async (tx) => {
       // Re-verify pending state inside transaction for race condition protection
@@ -495,20 +495,24 @@ export class PlansService {
         });
       }
 
-      // Check if baseline already exists for this member
-      const existingBaseline = await tx.planVersion.findFirst({
-        where: {
-          cycleId,
-          userId,
-          isBaseline: true,
-        },
-      });
+      const isReoptimized = current.versionType === 'reoptimized';
 
-      if (existingBaseline) {
-        throw new ConflictException({
-          code: 'CYCLE_STATE_INVALID',
-          message: 'A baseline plan has already been approved for this member in this cycle',
+      if (!isReoptimized) {
+        // Initial plan approval: promote to baseline
+        const existingBaseline = await tx.planVersion.findFirst({
+          where: {
+            cycleId,
+            userId,
+            isBaseline: true,
+          },
         });
+
+        if (existingBaseline) {
+          throw new ConflictException({
+            code: 'CYCLE_STATE_INVALID',
+            message: 'A baseline plan has already been approved for this member in this cycle',
+          });
+        }
       }
 
       const updated = await tx.planVersion.update({
@@ -516,7 +520,7 @@ export class PlansService {
         data: {
           approvalStatus: 'approved',
           approvedAt: now,
-          isBaseline: true,
+          isBaseline: !isReoptimized,
         },
         include: {
           planItems: {
@@ -525,67 +529,135 @@ export class PlansService {
         },
       });
 
-      // Materialize tasks from daily_task plan items into tasks table
-      const dailyTasks = updated.planItems.filter((item) => item.itemType === 'daily_task');
-      if (dailyTasks.length > 0) {
+      if (isReoptimized) {
+        // Task Sync for reoptimized plan:
+        // 1. Fetch existing tasks
         const existingTasks = await tx.task.findMany({
-          where: {
-            planItemId: { in: dailyTasks.map((i) => i.id) },
-          },
-          select: { planItemId: true },
+          where: { cycleId, userId },
         });
-        const existingItemIds = new Set(existingTasks.map((t) => t.planItemId));
 
-        const tasksToCreate = dailyTasks
-          .filter((item) => !existingItemIds.has(item.id))
-          .map((item) => ({
-            cycleId,
-            userId,
-            goalId: item.goalId,
-            planItemId: item.id,
-            title: item.title,
-            description: item.description,
-            status: 'pending',
-            scheduledDate: item.plannedDate,
-            estimatedMinutes: item.estimatedMinutes,
-          }));
+        const newDailyTasks = updated.planItems.filter((item) => item.itemType === 'daily_task');
+        const matchedItemIds = new Set<string>();
 
-        if (tasksToCreate.length > 0) {
+        // 2. Process existing tasks: preserve completed/cancelled untouched, sync or cancel uncompleted
+        for (const t of existingTasks) {
+          // NEVER touch completed or already cancelled tasks
+          if (t.status === 'completed' || t.status === 'cancelled' || t.completedAt != null) {
+            continue;
+          }
+
+          // Match by title & goalId
+          const matchingItem = newDailyTasks.find(
+            (item) =>
+              !matchedItemIds.has(item.id) &&
+              item.title === t.title &&
+              (item.goalId ?? null) === (t.goalId ?? null)
+          );
+
+          if (matchingItem) {
+            matchedItemIds.add(matchingItem.id);
+            await tx.task.update({
+              where: { id: t.id },
+              data: {
+                scheduledDate: matchingItem.plannedDate,
+                estimatedMinutes: matchingItem.estimatedMinutes,
+                planItemId: matchingItem.id,
+                status: t.status === 'paused' || t.status === 'postponed' ? 'pending' : t.status,
+              },
+            });
+          } else {
+            // Task was removed in reoptimization -> mark cancelled
+            await tx.task.update({
+              where: { id: t.id },
+              data: {
+                status: 'cancelled',
+              },
+            });
+          }
+        }
+
+        // 3. Materialize newly added tasks that didn't match existing tasks
+        const newlyAddedItems = newDailyTasks.filter((item) => !matchedItemIds.has(item.id));
+        if (newlyAddedItems.length > 0) {
           await tx.task.createMany({
-            data: tasksToCreate,
+            data: newlyAddedItems.map((item) => ({
+              cycleId,
+              userId,
+              goalId: item.goalId,
+              planItemId: item.id,
+              title: item.title,
+              description: item.description,
+              status: 'pending',
+              scheduledDate: item.plannedDate,
+              estimatedMinutes: item.estimatedMinutes,
+            })),
           });
+        }
+      } else {
+        // Initial plan task materialization
+        const dailyTasks = updated.planItems.filter((item) => item.itemType === 'daily_task');
+        if (dailyTasks.length > 0) {
+          const existingTasks = await tx.task.findMany({
+            where: {
+              planItemId: { in: dailyTasks.map((i) => i.id) },
+            },
+            select: { planItemId: true },
+          });
+          const existingItemIds = new Set(existingTasks.map((t) => t.planItemId));
+
+          const tasksToCreate = dailyTasks
+            .filter((item) => !existingItemIds.has(item.id))
+            .map((item) => ({
+              cycleId,
+              userId,
+              goalId: item.goalId,
+              planItemId: item.id,
+              title: item.title,
+              description: item.description,
+              status: 'pending',
+              scheduledDate: item.plannedDate,
+              estimatedMinutes: item.estimatedMinutes,
+            }));
+
+          if (tasksToCreate.length > 0) {
+            await tx.task.createMany({
+              data: tasksToCreate,
+            });
+          }
         }
       }
 
-      // 7. Check if all members with locked submissions have approved plans
-      const lockedSubmissions = await tx.monthlySubmission.findMany({
-        where: {
-          cycleId,
-          status: 'locked',
-        },
-        select: { userId: true },
-      });
-
-      const participatingUserIds = lockedSubmissions.map((s) => s.userId);
-
-      if (participatingUserIds.length > 0) {
-        const approvedBaselinesCount = await tx.planVersion.count({
+      // 7. Check if all members with locked submissions have approved plans (initial planning phase only)
+      if (!isReoptimized) {
+        const lockedSubmissions = await tx.monthlySubmission.findMany({
           where: {
             cycleId,
-            userId: { in: participatingUserIds },
-            isBaseline: true,
-            approvalStatus: 'approved',
+            status: 'locked',
           },
+          select: { userId: true },
         });
 
-        if (approvedBaselinesCount >= participatingUserIds.length) {
-          await tx.monthlyCycle.update({
-            where: { id: cycleId },
-            data: { status: 'execution' },
+        const participatingUserIds = lockedSubmissions.map((s) => s.userId);
+
+        if (participatingUserIds.length > 0) {
+          const approvedBaselinesCount = await tx.planVersion.count({
+            where: {
+              cycleId,
+              userId: { in: participatingUserIds },
+              isBaseline: true,
+              approvalStatus: 'approved',
+            },
           });
-          this.logger.log(
-            `All ${participatingUserIds.length} participating members have approved baseline plans. Cycle ${cycleId} advanced to 'execution'.`
-          );
+
+          if (approvedBaselinesCount >= participatingUserIds.length) {
+            await tx.monthlyCycle.update({
+              where: { id: cycleId },
+              data: { status: 'execution' },
+            });
+            this.logger.log(
+              `All ${participatingUserIds.length} participating members have approved baseline plans. Cycle ${cycleId} advanced to 'execution'.`
+            );
+          }
         }
       }
 

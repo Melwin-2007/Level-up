@@ -58,7 +58,7 @@ export const STATE_MATRIX: Readonly<
     submission_open: false,
     group_review: false,
     planning: true,
-    execution: false,
+    execution: true,
     completed: false,
     cancelled: false,
   },

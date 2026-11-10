@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 5
-- Current prompt: P51 (Complete)
-- Branch: feat/p51-reoptimize-endpoint
-- Next prompt: P52 (Approval and task sync)
+- Current prompt: P52 (Complete)
+- Branch: feat/p52-approval-task-sync
+- Next prompt: P53 (Mobile version history)
 
 ## Checklist
 
@@ -57,11 +57,12 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - [x] P50 Remaining-work calculator
 - [x] P51 POST /cycles/:id/reoptimize
-- [ ] P52 Approval and task sync
+- [x] P52 Approval and task sync
 - [ ] P53 Mobile version history
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented reoptimized plan approval and task synchronization in `PlansService.approvePlan`: sets `approvalStatus: 'approved'`, `isBaseline: false`, syncs future pending tasks, marks removed tasks as `cancelled`, and preserves completed tasks and `task_logs` 100% untouched.
 - Implemented `POST /cycles/:id/reoptimize` in `PlansService` & `PlansController`: computes remaining work and schedules candidates across remaining cycle days, generates immutable `PlanDiff` (moved/removed tasks), and persists new pending `plan_versions` record without mutating baseline plan or active tasks.
 - Implemented pure remaining-work calculator in `@mp/scheduler` (`calculateRemainingWork`): isolates completed tasks (immutable actuals), identifies slipped tasks with days-overdue metrics, aggregates future pending tasks, computes remaining capacity from today onwards, and derives feasibility balance and reschedule candidates without mutating input data.
 - Implemented Mobile Today & Daily Execution View (`apps/mobile/app/(tabs)/index.tsx`, `TaskCard`, `TaskActionSheet`, `useTasks`): displays scheduled daily tasks, live stopwatch execution timer, completion and postpone logging with append-only sync, and `MonthStrip` day completion fill ratios under dark design tokens.
@@ -126,9 +127,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - Built Month tab with MonthStrip, deadline markers, phase dates, member submission status list with `StatusSquare`, and advance confirmation sheet.
 - Implemented `submission-draft.ts` Zustand store with `persist` middleware to survive app crashes.
 - Implemented `submission-mapper.ts` for bidirectional conversion between form state and shared Zod API payloads.
-- Built Goal submission screen (`apps/mobile/app/cycles/[id]/submission.tsx`) with goal rows, add/edit goal Sheet, 5-square priority picker, deadline bounded by cycle month, success criteria picker (checklist, metric, binary), weekday steppers, lock confirmation, and orchestrated motion.
-- Built Group review screen (`apps/mobile/app/cycles/[id]/review.tsx`) grouping goals by member with accordion goal details, inline comment rows with relative timestamps, add comment Sheet, finish review confirmation, and 15s conditional polling while active.
-- Added Jest test suites for submission mapping, draft store, and review comment list (56/56 tests passing across 10 suites in mobile).
+- Built Goal submission & Group review screens (`submission.tsx`, `review.tsx`) with goal forms, comment sheets, and Jest unit test coverage (56 tests).
 
 - Configured EAS build in `apps/mobile/eas.json` (`preview`, `production`); wrote `docs/ACCEPTANCE-M1.md` with full 25-step SPEC scenario checklist.
 - Visual and contrast audit: WCAG AA contrast compliance verified; member privacy isolation verified across all endpoints and tests.
