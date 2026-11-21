@@ -205,3 +205,35 @@ export const monthlyReportResponseSchema = z.object({
 });
 
 export type MonthlyReportResponse = z.infer<typeof monthlyReportResponseSchema>;
+
+export const groupMemberReportSummarySchema = z.object({
+  userId: z.string(),
+  displayName: z.string(),
+  achievementRate: z.number().nullable(),
+  tasksCompleted: z.number().nullable(),
+  consistencyRate: z.number().nullable(),
+  goalTitles: z.array(z.string()),
+});
+
+export type GroupMemberReportSummary = z.infer<typeof groupMemberReportSummarySchema>;
+
+export const groupReportMetricsSchema = z.object({
+  totalMembers: z.number().int().min(0),
+  participatingMembers: z.number().int().min(0),
+  averageAchievementRate: z.number().min(0).max(100),
+  totalCompletedTasks: z.number().int().min(0),
+  averageConsistency: z.number().min(0).max(100),
+  memberSummaries: z.array(groupMemberReportSummarySchema),
+});
+
+export type GroupReportMetrics = z.infer<typeof groupReportMetricsSchema>;
+
+export const groupReportResponseSchema = z.object({
+  id: z.string().uuid(),
+  cycleId: z.string().uuid(),
+  reportType: z.literal('group'),
+  metrics: groupReportMetricsSchema,
+  createdAt: z.string().datetime(),
+});
+
+export type GroupReportResponse = z.infer<typeof groupReportResponseSchema>;

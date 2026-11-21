@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 6
-- Current prompt: P61 (Complete)
-- Branch: feat/p61-individual-report
-- Next prompt: P62 (Group report)
+- Current prompt: P62 (Complete)
+- Branch: feat/p62-group-report
+- Next prompt: P63 (Mobile reports)
 
 ## Checklist
 
@@ -35,10 +35,12 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - [x] P60 Metrics calculator
 - [x] P61 Individual report generation
-- [ ] P62 Group report
+- [x] P62 Group report
 - [ ] P63 Mobile reports
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented group aggregated reports and granular privacy controls in `apps/api` (`ReportsService`, `ReportsController`, `GET /cycles/:id/reports/group`, `PUT /cycles/:id/reports/sharing`): aggregates group averages across shared metrics while strictly omitting unshared data (`null` / empty arrays) from member summaries, enforcing `report_type = 'group' AND user_id IS NULL`.
 
 - Implemented individual monthly report generation in `apps/api` (`ReportsService`, `ReportsController`, `GET/POST /cycles/:id/reports/me`): combines pure `@mp/scheduler` metrics with evidence-backed AI insights strictly citing metric IDs (`reportInsightSchema`), persisting immutable `monthly_reports` rows without silent regeneration.
 - Implemented pure metrics calculator in `@mp/scheduler` (`src/metrics.ts`) and `@mp/shared`: computes partial-credit goal achievement across checklist, metric, and binary criteria; priority-weighted achievement rate; task execution status counts; estimate accuracy and variance; consistency (active calendar days & weekly completion); dual-plan performance comparing baseline vs reoptimized plan; and composite `calculateCycleMetrics` carrying formulas and inputs for self-explaining report rendering.

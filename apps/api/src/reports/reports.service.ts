@@ -1,6 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import type { GoalMetricInput, MonthlyReportResponse, ReportInsight } from '@mp/shared';
+import type {
+  GoalMetricInput,
+  MonthlyReportResponse,
+  ReportInsight,
+  GroupReportResponse,
+  GroupReportMetrics,
+  GroupMemberReportSummary,
+  MemberSharingSettings,
+  CycleReportMetrics,
+} from '@mp/shared';
 import {
   calculateCycleMetrics,
   type SuccessCriteriaDefinition,
@@ -316,6 +325,220 @@ export class ReportsService {
 
     // Auto-generate on read if cycle is in execution or completed
     return this.generateIndividualReport(cycleId, userId);
+  }
+
+  async getGroupReport(cycleId: string, callerUserId: string): Promise<GroupReportResponse> {
+    const cycle = await this.prisma.monthlyCycle.findUnique({
+      where: { id: cycleId },
+    });
+
+    if (!cycle) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    const callerMembership = await this.prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: cycle.groupId, userId: callerUserId } },
+    });
+
+    if (!callerMembership) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    this.cycleStateService.assertAllows(cycle, 'report.read');
+
+    const members = await this.prisma.groupMember.findMany({
+      where: { groupId: cycle.groupId },
+      include: {
+        user: {
+          select: { id: true, displayName: true },
+        },
+      },
+    });
+
+    const individualReports = await this.prisma.monthlyReport.findMany({
+      where: {
+        cycleId,
+        reportType: 'individual',
+        userId: { in: members.map((m) => m.userId) },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const reportByUser = new Map<string, (typeof individualReports)[0]>();
+    for (const rep of individualReports) {
+      if (rep.userId && !reportByUser.has(rep.userId)) {
+        reportByUser.set(rep.userId, rep);
+      }
+    }
+
+    const submissions = await this.prisma.monthlySubmission.findMany({
+      where: {
+        cycleId,
+        userId: { in: members.map((m) => m.userId) },
+        status: { in: ['submitted', 'locked'] },
+      },
+      include: {
+        goals: {
+          select: { title: true, position: true },
+          orderBy: { position: 'asc' },
+        },
+      },
+    });
+
+    const goalsByUser = new Map<string, string[]>();
+    for (const sub of submissions) {
+      goalsByUser.set(
+        sub.userId,
+        sub.goals.map((g) => g.title)
+      );
+    }
+
+    const defaultSharing: MemberSharingSettings = {
+      shareAchievementRate: true,
+      shareCompletedTasksCount: true,
+      shareConsistencyScore: true,
+      shareGoalTitles: false,
+    };
+
+    const memberSummaries: GroupMemberReportSummary[] = [];
+
+    for (const member of members) {
+      const userReport = reportByUser.get(member.userId);
+      if (!userReport) {
+        continue;
+      }
+
+      const sharing =
+        (userReport.sharingSettings as MemberSharingSettings | null) ?? defaultSharing;
+      const metrics = userReport.metrics as unknown as CycleReportMetrics;
+
+      const achievementRate = sharing.shareAchievementRate
+        ? metrics.weightedAchievement.value.score
+        : null;
+      const tasksCompleted = sharing.shareCompletedTasksCount
+        ? metrics.taskExecution.value.completedTasks
+        : null;
+      const consistencyRate = sharing.shareConsistencyScore
+        ? metrics.consistency.value.activeDaysRatio
+        : null;
+      const goalTitles = sharing.shareGoalTitles ? (goalsByUser.get(member.userId) ?? []) : [];
+
+      memberSummaries.push({
+        userId: member.userId,
+        displayName: member.user?.displayName || 'Member',
+        achievementRate,
+        tasksCompleted,
+        consistencyRate,
+        goalTitles,
+      });
+    }
+
+    const sharedAchievements = memberSummaries
+      .map((m) => m.achievementRate)
+      .filter((v): v is number => v !== null);
+    const averageAchievementRate =
+      sharedAchievements.length > 0
+        ? Math.round(
+            (sharedAchievements.reduce((a, b) => a + b, 0) / sharedAchievements.length) * 10
+          ) / 10
+        : 0;
+
+    const totalCompletedTasks = memberSummaries
+      .map((m) => m.tasksCompleted)
+      .filter((v): v is number => v !== null)
+      .reduce((a, b) => a + b, 0);
+
+    const sharedConsistencies = memberSummaries
+      .map((m) => m.consistencyRate)
+      .filter((v): v is number => v !== null);
+    const averageConsistency =
+      sharedConsistencies.length > 0
+        ? Math.round(
+            (sharedConsistencies.reduce((a, b) => a + b, 0) / sharedConsistencies.length) * 10
+          ) / 10
+        : 0;
+
+    const groupMetrics: GroupReportMetrics = {
+      totalMembers: members.length,
+      participatingMembers: memberSummaries.length,
+      averageAchievementRate,
+      totalCompletedTasks,
+      averageConsistency,
+      memberSummaries,
+    };
+
+    let groupReport = await this.prisma.monthlyReport.findFirst({
+      where: { cycleId, reportType: 'group', userId: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (groupReport) {
+      groupReport = await this.prisma.monthlyReport.update({
+        where: { id: groupReport.id },
+        data: { metrics: groupMetrics as unknown as Prisma.InputJsonValue },
+      });
+    } else {
+      groupReport = await this.prisma.monthlyReport.create({
+        data: {
+          cycleId,
+          userId: null,
+          reportType: 'group',
+          metrics: groupMetrics as unknown as Prisma.InputJsonValue,
+        },
+      });
+    }
+
+    return {
+      id: groupReport.id,
+      cycleId: groupReport.cycleId,
+      reportType: 'group',
+      metrics: groupMetrics,
+      createdAt: groupReport.createdAt.toISOString(),
+    };
+  }
+
+  async updateSharingSettings(
+    cycleId: string,
+    userId: string,
+    settings: MemberSharingSettings
+  ): Promise<MemberSharingSettings> {
+    const cycle = await this.prisma.monthlyCycle.findUnique({
+      where: { id: cycleId },
+    });
+
+    if (!cycle) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    const membership = await this.prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: cycle.groupId, userId } },
+    });
+
+    if (!membership) {
+      throw new NotFoundException({
+        error: { code: 'NOT_FOUND', message: 'Cycle not found' },
+      });
+    }
+
+    const report = await this.prisma.monthlyReport.findFirst({
+      where: { cycleId, userId, reportType: 'individual' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (report) {
+      await this.prisma.monthlyReport.update({
+        where: { id: report.id },
+        data: { sharingSettings: settings as unknown as Prisma.InputJsonValue },
+      });
+    }
+
+    return settings;
   }
 
   private mapToReportResponse(report: {
