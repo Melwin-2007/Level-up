@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 5 (Complete)
-- Current prompt: P53 (Complete)
-- Branch: main
-- Next prompt: Milestone 6 (P60 Retrospective & Reports)
+- Current milestone: 6
+- Current prompt: P60 (Complete)
+- Branch: feat/p60-metrics-calculator
+- Next prompt: P61 (Individual report generation)
 
 ## Checklist
 
@@ -29,13 +29,18 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ### Milestone 5: Reoptimization and Version History (Complete)
 
-- [x] P50 Remaining-work calculator
-- [x] P51 POST /cycles/:id/reoptimize
-- [x] P52 Approval and task sync
-- [x] P53 Mobile version history
+- [x] P50-P53 Complete (Remaining-work calculator, reoptimize endpoint, approval & task sync, mobile version history)
+
+### Milestone 6: Reports and Retrospectives (In Progress)
+
+- [x] P60 Metrics calculator
+- [ ] P61 Individual report generation
+- [ ] P62 Group report
+- [ ] P63 Mobile reports
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented pure metrics calculator in `@mp/scheduler` (`src/metrics.ts`) and `@mp/shared`: computes partial-credit goal achievement across checklist, metric, and binary criteria; priority-weighted achievement rate; task execution status counts; estimate accuracy and variance; consistency (active calendar days & weekly completion); dual-plan performance comparing baseline vs reoptimized plan; and composite `calculateCycleMetrics` carrying formulas and inputs for self-explaining report rendering.
 - Implemented mobile plan version history & reoptimization UI (`PlanVersionSheet`, `ReoptimizeSheet`, `PlanDiffView`, `GET /cycles/:id/plan-versions`): lets members inspect historical/reoptimized plan versions, preview structured diffs (moved/added/removed tasks), trigger reoptimization with reason validation, and approve reoptimized plans under dark tokens.
 - Implemented reoptimized plan approval and task synchronization in `PlansService.approvePlan`: sets `approvalStatus: 'approved'`, `isBaseline: false`, syncs future pending tasks, marks removed tasks as `cancelled`, and preserves completed tasks and `task_logs` 100% untouched.
 - Implemented `POST /cycles/:id/reoptimize` in `PlansService` & `PlansController`: computes remaining work and schedules candidates across remaining cycle days, generates immutable `PlanDiff` (moved/removed tasks), and persists new pending `plan_versions` record without mutating baseline plan or active tasks.

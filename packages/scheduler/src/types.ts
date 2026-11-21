@@ -190,3 +190,150 @@ export interface RemainingWorkOutput {
   rescheduleCandidates: TaskCandidate[];
   goalSummaries: GoalWorkSummary[];
 }
+
+export interface TaskLogItem {
+  id: string;
+  taskId: string;
+  action: string;
+  durationMinutes: number;
+  loggedAt: string | Date;
+  metadata?: Record<string, unknown> | null;
+}
+
+export type SuccessCriteriaType = 'checklist' | 'metric' | 'binary';
+
+export interface SuccessCriteriaChecklist {
+  type: 'checklist';
+  items: string[];
+}
+
+export interface SuccessCriteriaMetric {
+  type: 'metric';
+  target: number;
+  unit: string;
+}
+
+export interface SuccessCriteriaBinary {
+  type: 'binary';
+}
+
+export type SuccessCriteriaDefinition =
+  SuccessCriteriaChecklist | SuccessCriteriaMetric | SuccessCriteriaBinary;
+
+export type SuccessCriteriaProgressState =
+  | { type: 'checklist'; completedItems: string[] }
+  | { type: 'metric'; currentValue: number }
+  | { type: 'binary'; completed: boolean };
+
+export interface GoalMetricInput {
+  goalId: string;
+  title: string;
+  priority?: number;
+  estimatedHours?: number;
+  status?: string;
+  successCriteria?: SuccessCriteriaDefinition;
+  progress?: SuccessCriteriaProgressState;
+}
+
+export interface GoalAchievementDetail {
+  goalId: string;
+  title: string;
+  weight: number;
+  rawScore: number;
+  weightedScore: number;
+  criteriaType: 'checklist' | 'metric' | 'binary' | 'tasks_fallback' | 'none';
+  calculationDetails: string;
+}
+
+export interface WeightedAchievementMetric {
+  score: number;
+  totalWeight: number;
+  totalWeightedScore: number;
+  goals: GoalAchievementDetail[];
+}
+
+export interface TaskExecutionMetric {
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  pendingTasks: number;
+  postponedTasks: number;
+  cancelledTasks: number;
+  completionRate: number;
+  totalEstimatedMinutes: number;
+  totalActualMinutes: number;
+}
+
+export interface TaskAccuracyItem {
+  taskId: string;
+  title: string;
+  estimatedMinutes: number;
+  actualMinutes: number;
+  varianceMinutes: number;
+}
+
+export interface EstimateAccuracyMetric {
+  completedTasksCount: number;
+  totalEstimatedMinutes: number;
+  totalActualMinutes: number;
+  varianceMinutes: number;
+  accuracyRatio: number;
+  taskBreakdown: TaskAccuracyItem[];
+}
+
+export interface WeekConsistencyItem {
+  weekNumber: 1 | 2 | 3 | 4 | 5;
+  scheduledTasks: number;
+  completedTasks: number;
+  completionRate: number;
+}
+
+export interface ConsistencyMetric {
+  activeDays: number;
+  totalCycleDays: number;
+  activeDaysRatio: number;
+  weeklyCompletion: WeekConsistencyItem[];
+}
+
+export interface PlanPerformanceRecord {
+  plannedTasks: number;
+  completedTasks: number;
+  completionRate: number;
+  plannedMinutes: number;
+  actualMinutes: number;
+}
+
+export interface PlanComparisonMetric {
+  baseline: PlanPerformanceRecord;
+  currentPlan: PlanPerformanceRecord;
+  scopeVariance: {
+    addedTasks: number;
+    removedTasks: number;
+    rescheduledTasks: number;
+  };
+}
+
+export interface MetricResult<T> {
+  value: T;
+  displayValue: string;
+  formula: string;
+  inputs: Record<string, unknown>;
+}
+
+export interface CycleReportMetrics {
+  weightedAchievement: MetricResult<WeightedAchievementMetric>;
+  taskExecution: MetricResult<TaskExecutionMetric>;
+  estimateAccuracy: MetricResult<EstimateAccuracyMetric>;
+  consistency: MetricResult<ConsistencyMetric>;
+  planComparison: MetricResult<PlanComparisonMetric>;
+}
+
+export interface CycleMetricsInput {
+  goals: GoalMetricInput[];
+  tasks: TaskExecutionItem[];
+  logs?: TaskLogItem[];
+  cycleStartDate: string;
+  cycleEndDate: string;
+  baselinePlanItems?: PlanItemSnapshot[];
+  currentPlanItems?: PlanItemSnapshot[];
+}
