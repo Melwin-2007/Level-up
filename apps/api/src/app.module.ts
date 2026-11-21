@@ -18,6 +18,7 @@ import { AiModule } from './ai/ai.module.js';
 import { PlansModule } from './plans/plans.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { TasksModule } from './tasks/tasks.module.js';
     PlansModule,
     JobsModule,
     TasksModule,
+    ReportsModule,
   ],
   controllers: [HealthController],
   providers: [

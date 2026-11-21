@@ -60,6 +60,37 @@ export class FakeLlmClient implements LlmClient {
         ],
         pacingSummary: 'Balanced weekly load across the month.',
       };
+    } else if (params.promptId === 'report-insights') {
+      rawOutput = {
+        insights: [
+          {
+            id: 'ins-1',
+            title: 'High Goal Completion Rate',
+            observation: 'Achieved high overall goal completion during this cycle.',
+            recommendation: 'Maintain steady weekly pacing in the upcoming cycle.',
+            citations: [
+              {
+                metricId: 'weighted_achievement',
+                metricValue: '85%',
+                reason: 'Primary goals achieved on schedule with required criteria met',
+              },
+            ],
+          },
+          {
+            id: 'ins-2',
+            title: 'Estimation Accuracy Consistency',
+            observation: 'Execution times aligned with initial estimates with low variance.',
+            recommendation: 'Keep standard task buffer sizes for complex tasks.',
+            citations: [
+              {
+                metricId: 'estimate_accuracy',
+                metricValue: '90%',
+                reason: 'Task duration variance remained within normal bounds',
+              },
+            ],
+          },
+        ],
+      };
     } else {
       rawOutput = {};
     }

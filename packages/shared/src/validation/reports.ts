@@ -187,6 +187,12 @@ export const memberSharingSettingsSchema = z.object({
 
 export type MemberSharingSettings = z.infer<typeof memberSharingSettingsSchema>;
 
+export const regenerateReportSchema = z.object({
+  note: z.string().trim().min(5, 'Regeneration note must be at least 5 characters').max(500),
+});
+
+export type RegenerateReportInput = z.infer<typeof regenerateReportSchema>;
+
 export const monthlyReportResponseSchema = z.object({
   id: z.string().uuid(),
   cycleId: z.string().uuid(),

@@ -70,6 +70,22 @@ export const STATE_MATRIX: Readonly<
     completed: false,
     cancelled: false,
   },
+  'report.read': {
+    submission_open: false,
+    group_review: false,
+    planning: false,
+    execution: true,
+    completed: true,
+    cancelled: false,
+  },
+  'report.generate': {
+    submission_open: false,
+    group_review: false,
+    planning: false,
+    execution: true,
+    completed: true,
+    cancelled: false,
+  },
   advance: {
     submission_open: true,
     group_review: true,

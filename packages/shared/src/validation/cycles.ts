@@ -10,6 +10,8 @@ export const CYCLE_OPERATIONS = [
   'plan.generate',
   'plan.approve',
   'plan.reoptimize',
+  'report.read',
+  'report.generate',
   'advance',
 ] as const;
 

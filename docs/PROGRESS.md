@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 6
-- Current prompt: P60 (Complete)
-- Branch: feat/p60-metrics-calculator
-- Next prompt: P61 (Individual report generation)
+- Current prompt: P61 (Complete)
+- Branch: feat/p61-individual-report
+- Next prompt: P62 (Group report)
 
 ## Checklist
 
@@ -34,12 +34,13 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ### Milestone 6: Reports and Retrospectives (In Progress)
 
 - [x] P60 Metrics calculator
-- [ ] P61 Individual report generation
+- [x] P61 Individual report generation
 - [ ] P62 Group report
 - [ ] P63 Mobile reports
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
 
+- Implemented individual monthly report generation in `apps/api` (`ReportsService`, `ReportsController`, `GET/POST /cycles/:id/reports/me`): combines pure `@mp/scheduler` metrics with evidence-backed AI insights strictly citing metric IDs (`reportInsightSchema`), persisting immutable `monthly_reports` rows without silent regeneration.
 - Implemented pure metrics calculator in `@mp/scheduler` (`src/metrics.ts`) and `@mp/shared`: computes partial-credit goal achievement across checklist, metric, and binary criteria; priority-weighted achievement rate; task execution status counts; estimate accuracy and variance; consistency (active calendar days & weekly completion); dual-plan performance comparing baseline vs reoptimized plan; and composite `calculateCycleMetrics` carrying formulas and inputs for self-explaining report rendering.
 - Implemented mobile plan version history & reoptimization UI (`PlanVersionSheet`, `ReoptimizeSheet`, `PlanDiffView`, `GET /cycles/:id/plan-versions`): lets members inspect historical/reoptimized plan versions, preview structured diffs (moved/added/removed tasks), trigger reoptimization with reason validation, and approve reoptimized plans under dark tokens.
 - Implemented reoptimized plan approval and task synchronization in `PlansService.approvePlan`: sets `approvalStatus: 'approved'`, `isBaseline: false`, syncs future pending tasks, marks removed tasks as `cancelled`, and preserves completed tasks and `task_logs` 100% untouched.
