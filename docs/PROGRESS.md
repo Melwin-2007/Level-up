@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 7
-- Current prompt: P70 (Complete)
-- Branch: feat/p70-xp-ledger
-- Next prompt: P71 (Streaks and achievements)
+- Current milestone: 7 (Complete)
+- Current prompt: P71 (Complete)
+- Branch: feat/p71-streaks-and-achievements
+- Next prompt: P80 (Offline Sync & Conflict Architecture)
 
 ## Checklist
 
@@ -33,17 +33,16 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ### Milestone 6: Reports and Retrospectives (Complete)
 
-- [x] P60 Metrics calculator
-- [x] P61 Individual report generation
-- [x] P62 Group report
-- [x] P63 Mobile reports
+- [x] P60-P63 Complete (Metrics calculator, individual report, group report, mobile retrospective views)
 
-### Milestone 7: XP and Gamification (In Progress)
+### Milestone 7: XP and Gamification (Complete)
 
 - [x] P70 Ledger
-- [ ] P71 Streaks and achievements
+- [x] P71 Streaks and achievements
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented pure streaks and achievements engine (`@mp/shared`, `apps/api`, `apps/mobile`): computes daily active streaks and 6 milestone achievements as pure projections over completed task timestamps in the member's IANA timezone; awards one-off XP ledger entries idempotently (`achievement:${id}:1`); renders Level progress, active flame streaks, and unlocked badges on mobile "You" tab adhering strictly to dark design tokens (`no-hex-outside-tokens`).
 
 - Implemented backend-only XP ledger and level derivation in `@mp/shared` and `apps/api` (`XpService`, `XpController`, `GET /me/xp`): awards task completion XP with deterministic idempotency keys (`${taskId}:task_completed:1`) scaled by estimated duration, deriving level progression dynamically from the append-only ledger sum via quadratic curve `50 * (L - 1) * L` without mutable counter columns.
 
