@@ -14,6 +14,7 @@ export default function CyclesLayout(): React.ReactNode {
       <Stack.Screen name="[id]/submission" />
       <Stack.Screen name="[id]/review" />
       <Stack.Screen name="[id]/plan" />
+      <Stack.Screen name="[id]/report" />
     </Stack>
   );
 }

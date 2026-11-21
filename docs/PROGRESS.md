@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 6
-- Current prompt: P62 (Complete)
-- Branch: feat/p62-group-report
-- Next prompt: P63 (Mobile reports)
+- Current milestone: 7
+- Current prompt: P63 (Complete)
+- Branch: feat/p63-mobile-reports
+- Next prompt: P70 (Ledger)
 
 ## Checklist
 
@@ -31,14 +31,16 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - [x] P50-P53 Complete (Remaining-work calculator, reoptimize endpoint, approval & task sync, mobile version history)
 
-### Milestone 6: Reports and Retrospectives (In Progress)
+### Milestone 6: Reports and Retrospectives (Complete)
 
 - [x] P60 Metrics calculator
 - [x] P61 Individual report generation
 - [x] P62 Group report
-- [ ] P63 Mobile reports
+- [x] P63 Mobile reports
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented mobile monthly report views and retrospective controls (`apps/mobile/app/cycles/[id]/report.tsx`, `components/reports/`): built individual and group retrospective tabs with expandable formula calculation breakdowns, pure dark token SVG progress gauges (`no-hex-outside-tokens`), dual-plan baseline vs current plan comparison, evidence-backed AI insights citing metric IDs, `SharingSheet` granular privacy controls, and `RegenerateSheet` audit reason notes.
 
 - Implemented group aggregated reports and granular privacy controls in `apps/api` (`ReportsService`, `ReportsController`, `GET /cycles/:id/reports/group`, `PUT /cycles/:id/reports/sharing`): aggregates group averages across shared metrics while strictly omitting unshared data (`null` / empty arrays) from member summaries, enforcing `report_type = 'group' AND user_id IS NULL`.
 

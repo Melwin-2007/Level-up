@@ -698,6 +698,13 @@ export default function PlanReviewScreen(): React.ReactNode {
                       onPress={() => setReoptimizeSheetOpen(true)}
                     />
                   )}
+                  {(cycle?.status === 'execution' || cycle?.status === 'completed') && (
+                    <Button
+                      label="Monthly Report"
+                      variant="primary"
+                      onPress={() => router.push(`/cycles/${id}/report` as never)}
+                    />
+                  )}
                 </View>
               </View>
             )}
