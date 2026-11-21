@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { CLOCK, SystemClock } from '../common/clock/clock.js';
+import { XpModule } from '../xp/xp.module.js';
 import { TasksService } from './tasks.service.js';
 import { TasksController } from './tasks.controller.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, XpModule],
   controllers: [TasksController],
   providers: [
     TasksService,

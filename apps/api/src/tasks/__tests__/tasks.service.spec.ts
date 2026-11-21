@@ -298,5 +298,87 @@ describe('TasksService (P42)', () => {
       expect(mockPrisma.task.update).not.toHaveBeenCalled();
       expect(mockPrisma.taskLog.create).not.toHaveBeenCalled();
     });
+
+    it('should invoke XpService.awardTaskCompletionXp when completing a pending task', async () => {
+      const mockXpService = {
+        awardTaskCompletionXp: vi.fn().mockResolvedValue({ id: 'tx-1' }),
+      };
+
+      const taskServiceWithXp = new TasksService(
+        mockPrisma as unknown as PrismaService,
+        mockClock,
+        mockXpService as never
+      );
+
+      mockPrisma.task.findUnique.mockResolvedValue({
+        ...baseTask,
+        status: 'pending',
+      });
+      mockPrisma.task.update.mockResolvedValue({
+        ...baseTask,
+        status: 'completed',
+        completedAt: fixedNow,
+      });
+      mockPrisma.taskLog.create.mockResolvedValue({
+        id: 'log-new',
+        taskId,
+        userId,
+        action: 'complete',
+        durationMinutes: 30,
+        note: null,
+        metadata: {},
+        loggedAt: fixedNow,
+      });
+
+      await taskServiceWithXp.logTaskAction(userId, taskId, {
+        action: 'complete',
+        durationMinutes: 30,
+      });
+
+      expect(mockXpService.awardTaskCompletionXp).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({ status: 'completed' }),
+        expect.anything()
+      );
+    });
+
+    it('should not award XP if task was already completed', async () => {
+      const mockXpService = {
+        awardTaskCompletionXp: vi.fn(),
+      };
+
+      const taskServiceWithXp = new TasksService(
+        mockPrisma as unknown as PrismaService,
+        mockClock,
+        mockXpService as never
+      );
+
+      mockPrisma.task.findUnique.mockResolvedValue({
+        ...baseTask,
+        status: 'completed',
+        completedAt: fixedNow,
+      });
+      mockPrisma.task.update.mockResolvedValue({
+        ...baseTask,
+        status: 'completed',
+      });
+      mockPrisma.taskLog.create.mockResolvedValue({
+        id: 'log-2',
+        taskId,
+        userId,
+        action: 'complete',
+        durationMinutes: 0,
+        note: null,
+        metadata: {},
+        loggedAt: fixedNow,
+      });
+
+      await taskServiceWithXp.logTaskAction(userId, taskId, {
+        action: 'complete',
+        durationMinutes: 0,
+      });
+
+      expect(mockXpService.awardTaskCompletionXp).not.toHaveBeenCalled();
+    });
   });
 });

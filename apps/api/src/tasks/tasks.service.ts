@@ -1,7 +1,8 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Inject, Optional, NotFoundException, Logger } from '@nestjs/common';
 import type { Task, TaskLog, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CLOCK, type Clock } from '../common/clock/clock.js';
+import { XpService } from '../xp/xp.service.js';
 import type {
   LogTaskActionInput,
   QueryTasksInput,
@@ -15,7 +16,8 @@ export class TasksService {
 
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(CLOCK) private readonly clock: Clock
+    @Inject(CLOCK) private readonly clock: Clock,
+    @Optional() @Inject(XpService) private readonly xpService?: XpService
   ) {}
 
   private mapLog(log: TaskLog): TaskLogResponse {
@@ -184,6 +186,11 @@ export class TasksService {
           loggedAt: now,
         },
       });
+
+      // Award XP on task completion if not already completed
+      if (input.action === 'complete' && task.status !== 'completed' && this.xpService) {
+        await this.xpService.awardTaskCompletionXp(userId, updatedTask, tx);
+      }
 
       return {
         task: this.mapTask(updatedTask),

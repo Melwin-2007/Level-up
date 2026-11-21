@@ -5,9 +5,9 @@ Agents: update this file as the last action of every session. Keep it under 150 
 ## Status
 
 - Current milestone: 7
-- Current prompt: P63 (Complete)
-- Branch: feat/p63-mobile-reports
-- Next prompt: P70 (Ledger)
+- Current prompt: P70 (Complete)
+- Branch: feat/p70-xp-ledger
+- Next prompt: P71 (Streaks and achievements)
 
 ## Checklist
 
@@ -38,7 +38,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P62 Group report
 - [x] P63 Mobile reports
 
+### Milestone 7: XP and Gamification (In Progress)
+
+- [x] P70 Ledger
+- [ ] P71 Streaks and achievements
+
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented backend-only XP ledger and level derivation in `@mp/shared` and `apps/api` (`XpService`, `XpController`, `GET /me/xp`): awards task completion XP with deterministic idempotency keys (`${taskId}:task_completed:1`) scaled by estimated duration, deriving level progression dynamically from the append-only ledger sum via quadratic curve `50 * (L - 1) * L` without mutable counter columns.
 
 - Implemented mobile monthly report views and retrospective controls (`apps/mobile/app/cycles/[id]/report.tsx`, `components/reports/`): built individual and group retrospective tabs with expandable formula calculation breakdowns, pure dark token SVG progress gauges (`no-hex-outside-tokens`), dual-plan baseline vs current plan comparison, evidence-backed AI insights citing metric IDs, `SharingSheet` granular privacy controls, and `RegenerateSheet` audit reason notes.
 
