@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 7 (Complete)
-- Current prompt: P71 (Complete)
-- Branch: feat/p71-streaks-and-achievements
-- Next prompt: P80 (Offline Sync & Conflict Architecture)
+- Current milestone: 8 (In Progress)
+- Current prompt: P80 (Complete)
+- Branch: feat/p80-sync-design
+- Next prompt: P81 (SQLite Outbox and Sync Protocol Implementation)
 
 ## Checklist
 
@@ -40,7 +40,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P70 Ledger
 - [x] P71 Streaks and achievements
 
+### Milestone 8: Offline Sync (In Progress)
+
+- [x] P80 Design note (`docs/SYNC.md`)
+- [ ] P81 SQLite outbox and sync protocol
+
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Defined offline synchronization architecture and conflict resolution rules in `docs/SYNC.md`: daily task execution is local-first (`task_logs`, `tasks` cache) while planning, review, and reporting remain strictly online and server-authoritative; task logs are zero-conflict append-only events deduplicated by deterministic idempotency keys (`${taskId}:${action}:${clientUUID}`); task status projections follow last-writer-wins; local mutations queue in a mobile SQLite outbox flushed via `POST /sync/push` with exponential backoff and network event triggers, and refreshed via `GET /sync/pull?since=` delta queries.
 
 - Implemented pure streaks and achievements engine (`@mp/shared`, `apps/api`, `apps/mobile`): computes daily active streaks and 6 milestone achievements as pure projections over completed task timestamps in the member's IANA timezone; awards one-off XP ledger entries idempotently (`achievement:${id}:1`); renders Level progress, active flame streaks, and unlocked badges on mobile "You" tab adhering strictly to dark design tokens (`no-hex-outside-tokens`).
 
