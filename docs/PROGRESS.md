@@ -6,7 +6,7 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 - Current milestone: 9 (Complete)
 - Current prompt: P90 (Complete)
-- Branch: feat/p90-month-over-month
+- Branch: main (merged, up to date with origin/main)
 - Next prompt: None (All 9 milestones complete: M1-M9 ready for production release)
 
 ## Checklist
