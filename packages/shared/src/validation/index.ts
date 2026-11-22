@@ -10,6 +10,7 @@ export * from './planner.js';
 export * from './tasks.js';
 export * from './push-token.js';
 export * from './reports.js';
+export * from './sync.js';
 
 export const cycleStatusSchema = z.enum(CYCLE_STATUSES);
 export const submissionStatusSchema = z.enum(SUBMISSION_STATUSES);

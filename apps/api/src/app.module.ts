@@ -20,6 +20,7 @@ import { JobsModule } from './jobs/jobs.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { XpModule } from './xp/xp.module.js';
+import { SyncModule } from './sync/sync.module.js';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { XpModule } from './xp/xp.module.js';
     TasksModule,
     ReportsModule,
     XpModule,
+    SyncModule,
   ],
   controllers: [HealthController],
   providers: [

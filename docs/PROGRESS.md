@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 8 (In Progress)
-- Current prompt: P80 (Complete)
-- Branch: feat/p80-sync-design
-- Next prompt: P81 (SQLite Outbox and Sync Protocol Implementation)
+- Current milestone: 8 (Complete)
+- Current prompt: P81 (Complete)
+- Branch: feat/p81-sqlite-outbox
+- Next prompt: P90 (Advanced Analytics: Month-over-month)
 
 ## Checklist
 
@@ -40,12 +40,14 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P70 Ledger
 - [x] P71 Streaks and achievements
 
-### Milestone 8: Offline Sync (In Progress)
+### Milestone 8: Offline Sync (Complete)
 
 - [x] P80 Design note (`docs/SYNC.md`)
-- [ ] P81 SQLite outbox and sync protocol
+- [x] P81 SQLite outbox and sync protocol
 
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented SQLite/AsyncStorage local outbox and offline synchronization in `@mp/shared`, `apps/api` (`SyncService`, `SyncController`, `POST /sync/push`, `GET /sync/pull`), and `apps/mobile` (`LocalStore`, `SyncManager`): allows members to start, pause, complete, and postpone tasks offline with optimistic local projections; assigns client idempotency keys (`${taskId}:${action}:${clientUUID}`); flushes batched actions to `POST /sync/push` with transactional execution, idempotency replay protection, and atomic XP awards; pulls delta updates via `GET /sync/pull?since=` with active cycle and user XP.
 
 - Defined offline synchronization architecture and conflict resolution rules in `docs/SYNC.md`: daily task execution is local-first (`task_logs`, `tasks` cache) while planning, review, and reporting remain strictly online and server-authoritative; task logs are zero-conflict append-only events deduplicated by deterministic idempotency keys (`${taskId}:${action}:${clientUUID}`); task status projections follow last-writer-wins; local mutations queue in a mobile SQLite outbox flushed via `POST /sync/push` with exponential backoff and network event triggers, and refreshed via `GET /sync/pull?since=` delta queries.
 
