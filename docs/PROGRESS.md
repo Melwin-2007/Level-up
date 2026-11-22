@@ -4,10 +4,10 @@ Agents: update this file as the last action of every session. Keep it under 150 
 
 ## Status
 
-- Current milestone: 8 (Complete)
-- Current prompt: P81 (Complete)
-- Branch: feat/p81-sqlite-outbox
-- Next prompt: P90 (Advanced Analytics: Month-over-month)
+- Current milestone: 9 (Complete)
+- Current prompt: P90 (Complete)
+- Branch: feat/p90-month-over-month
+- Next prompt: None (All 9 milestones complete: M1-M9 ready for production release)
 
 ## Checklist
 
@@ -45,7 +45,13 @@ Agents: update this file as the last action of every session. Keep it under 150 
 - [x] P80 Design note (`docs/SYNC.md`)
 - [x] P81 SQLite outbox and sync protocol
 
+### Milestone 9: Advanced Analytics (Complete)
+
+- [x] P90 Month-over-month
+
 ## Decisions made in sessions (also copied to DECISIONS.md)
+
+- Implemented month-over-month advanced analytics in `@mp/shared`, `apps/api` (`AnalyticsService`, `AnalyticsController`, `GET /me/analytics/trends`), and `apps/mobile` (`useAnalytics`, `TrendsCard`): derives multi-cycle longitudinal progressions (achievement, accuracy, consistency, category success rates) strictly from historical immutable `monthly_reports` (`report_type: 'individual'`) without recomputing from mutable actuals; provides evidence-backed AI observations citing trend metric keys; renders trend cards adhering to dark design tokens (`no-hex-outside-tokens`).
 
 - Implemented SQLite/AsyncStorage local outbox and offline synchronization in `@mp/shared`, `apps/api` (`SyncService`, `SyncController`, `POST /sync/push`, `GET /sync/pull`), and `apps/mobile` (`LocalStore`, `SyncManager`): allows members to start, pause, complete, and postpone tasks offline with optimistic local projections; assigns client idempotency keys (`${taskId}:${action}:${clientUUID}`); flushes batched actions to `POST /sync/push` with transactional execution, idempotency replay protection, and atomic XP awards; pulls delta updates via `GET /sync/pull?since=` with active cycle and user XP.
 

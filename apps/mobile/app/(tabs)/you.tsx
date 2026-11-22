@@ -6,6 +6,8 @@ import { Screen, Title, Text, Row, Divider, Avatar, Button } from '@/components/
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useSessionStore } from '@/stores/session';
 import { useGamification } from '@/hooks/use-gamification';
+import { useAnalytics } from '@/hooks/use-analytics';
+import { TrendsCard } from '@/components/analytics';
 
 export default function YouScreen(): React.ReactNode {
   const profile = useSessionStore((s) => s.profile);
@@ -13,6 +15,7 @@ export default function YouScreen(): React.ReactNode {
   const [signingOut, setSigningOut] = useState(false);
 
   const { data: gamification, refetch, isRefetching } = useGamification();
+  const { data: analytics, refetch: refetchAnalytics } = useAnalytics();
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -38,7 +41,10 @@ export default function YouScreen(): React.ReactNode {
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
-          onRefresh={() => void refetch()}
+          onRefresh={() => {
+            void refetch();
+            void refetchAnalytics();
+          }}
           tintColor={colors.flare}
         />
       }
@@ -164,6 +170,9 @@ export default function YouScreen(): React.ReactNode {
           </View>
         </View>
       ) : null}
+
+      {/* Longitudinal Trends */}
+      <TrendsCard analytics={analytics} />
 
       <Divider />
 

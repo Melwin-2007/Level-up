@@ -5,3 +5,4 @@ export * from './validation/index.js';
 export * from './gamification/xp.js';
 export * from './gamification/streaks.js';
 export * from './gamification/achievements.js';
+export * from './analytics/index.js';

@@ -81,6 +81,14 @@ jest.mock('@/hooks/use-gamification', () => ({
   }),
 }));
 
+jest.mock('@/hooks/use-analytics', () => ({
+  useAnalytics: () => ({
+    data: null,
+    isLoading: false,
+    refetch: jest.fn(),
+  }),
+}));
+
 jest.mock('@/stores/session', () => ({
   useSessionStore: (
     selector: (s: {
